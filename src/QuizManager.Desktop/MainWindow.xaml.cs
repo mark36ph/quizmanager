@@ -1,3 +1,4 @@
+using Microsoft.Win32;
 using System.Windows.Threading;
 using QuizManager.Infrastructure.Data;
 using Velopack;
@@ -96,6 +97,53 @@ public partial class MainWindow : System.Windows.Window
         };
         window.ShowDialog();
     }
+
+    private async void ImportLegacy_Click(object sender, System.Windows.RoutedEventArgs e)
+    {
+        var dialog = new OpenFileDialog
+        {
+            Title = "Import FactVault Manager database",
+            Filter = "FactVault databases (*.db)|*.db|SQLite databases (*.db3;*.sqlite;*.sqlite3)|*.db3;*.sqlite;*.sqlite3|All files (*.*)|*.*",
+            CheckFileExists = true,
+            Multiselect = false
+        };
+        if (dialog.ShowDialog(this) != true)
+            return;
+
+        var confirm = System.Windows.MessageBox.Show(
+            "Quiz Manager will create a backup of its current database before importing. Your existing V2 data will not be deleted. The original database will be preserved inside the V2 database as legacy tables, while its question library is imported into the new question format.\n\nContinue?",
+            "Import existing database",
+            System.Windows.MessageBoxButton.YesNo,
+            System.Windows.MessageBoxImage.Question);
+        if (confirm != System.Windows.MessageBoxResult.Yes)
+            return;
+
+        try
+        {
+            Mouse.OverrideCursor = System.Windows.Input.Cursors.Wait;
+            var importer = new LegacyDatabaseImporter(_questionLibraryDatabasePath());
+            var result = await importer.ImportAsync(dialog.FileName);
+            System.Windows.MessageBox.Show(
+                $"Import complete.\n\nQuestions imported: {result.ImportedQuestions}\nDuplicates skipped: {result.SkippedDuplicateQuestions}\nLegacy tables preserved: {result.LegacyTablesPreserved}\n\nA backup of the current V2 database was created before the import.",
+                "Database imported",
+                System.Windows.MessageBoxButton.OK,
+                System.Windows.MessageBoxImage.Information);
+        }
+        catch (Exception ex)
+        {
+            System.Windows.MessageBox.Show(
+                $"The database could not be imported.\n\n{ex.Message}",
+                "Import failed",
+                System.Windows.MessageBoxButton.OK,
+                System.Windows.MessageBoxImage.Error);
+        }
+        finally
+        {
+            Mouse.OverrideCursor = null;
+        }
+    }
+
+    private string _questionLibraryDatabasePath() => ((App)System.Windows.Application.Current).Database.DatabasePath;
 
     private async void Update_Click(object sender, System.Windows.RoutedEventArgs e)
     {
