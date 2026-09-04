@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <UseWPF>true</UseWPF>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <RootNamespace>QuizManager.Desktop</RootNamespace>
+    <AssemblyName>QuizManager</AssemblyName>
+    <ApplicationTitle>Factburst Quiz Manager</ApplicationTitle>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\QuizManager.Core\QuizManager.Core.csproj" />
+    <ProjectReference Include="..\QuizManager.Infrastructure\QuizManager.Infrastructure.csproj" />
+    <ProjectReference Include="..\QuizManager.Rendering\QuizManager.Rendering.csproj" />
+  </ItemGroup>
+</Project>
