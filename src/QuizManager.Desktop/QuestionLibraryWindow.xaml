@@ -58,6 +58,15 @@
                             <ComboBox x:Name="DifficultyBox" Width="100" Margin="8,0,0,0"><ComboBoxItem Content="easy"/><ComboBoxItem Content="medium"/><ComboBoxItem Content="hard"/><ComboBoxItem Content="insane"/></ComboBox>
                             <CheckBox x:Name="EnabledBox" Content="Enabled" IsChecked="True" Margin="16,0,0,0" VerticalAlignment="Center" />
                         </StackPanel>
+                        <TextBlock Text="Question Image" Foreground="{StaticResource SecondaryText}" />
+                        <Border Height="150" Margin="0,5,0,8" BorderBrush="{StaticResource SecondaryText}" BorderThickness="1" CornerRadius="6">
+                            <Image x:Name="ImagePreview" Stretch="Uniform" Margin="6" />
+                        </Border>
+                        <TextBlock x:Name="ImagePathText" Text="No image selected" Foreground="{StaticResource SecondaryText}" TextTrimming="CharacterEllipsis" ToolTipService.ShowOnDisabled="True" Margin="0,0,0,8" />
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
+                            <Button Content="Choose Image" Width="110" Height="34" Click="SelectImage_Click" />
+                            <Button Content="Clear Image" Width="100" Height="34" Margin="8,0,0,0" Click="ClearImage_Click" />
+                        </StackPanel>
                         <TextBlock Text="Explanation" Foreground="{StaticResource SecondaryText}" /><TextBox x:Name="ExplanationText" Height="70" AcceptsReturn="True" TextWrapping="Wrap" Margin="0,4,0,12" />
                         <TextBlock Text="Source" Foreground="{StaticResource SecondaryText}" /><TextBox x:Name="SourceText" Margin="0,4,0,16" />
                         <StackPanel Orientation="Horizontal">
