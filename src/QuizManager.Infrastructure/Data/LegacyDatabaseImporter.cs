@@ -13,13 +13,13 @@ public sealed record LegacyImportResult(
 public sealed class LegacyDatabaseImporter
 {
     private readonly string _destinationPath;
-    private readonly string _dataRoot;
+    private readonly string _dataDirectory;
 
     public LegacyDatabaseImporter(string destinationPath)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(destinationPath);
         _destinationPath = Path.GetFullPath(destinationPath);
-        _dataRoot = Path.GetDirectoryName(Path.GetDirectoryName(_destinationPath) ?? _destinationPath) ?? AppContext.BaseDirectory;
+        _dataDirectory = Path.GetDirectoryName(_destinationPath) ?? AppContext.BaseDirectory;
     }
 
     public async Task<LegacyImportResult> ImportAsync(string sourcePath, CancellationToken cancellationToken = default)
@@ -32,7 +32,7 @@ public sealed class LegacyDatabaseImporter
 
         await ValidateLegacyDatabaseAsync(sourcePath, cancellationToken);
 
-        var backupDirectory = Path.Combine(_dataRoot, "backups");
+        var backupDirectory = Path.Combine(_dataDirectory, "backups");
         Directory.CreateDirectory(backupDirectory);
         var backupPath = Path.Combine(backupDirectory, $"quizmanager-before-import-{DateTime.UtcNow:yyyyMMdd-HHmmss}.db");
         if (File.Exists(_destinationPath))
@@ -48,7 +48,6 @@ public sealed class LegacyDatabaseImporter
         try
         {
             await EnsureImportMetadataAsync(connection, cancellationToken);
-            var stamp = DateTime.UtcNow.ToString("O");
             var tables = await GetSourceTablesAsync(connection, cancellationToken);
             foreach (var table in tables)
             {
@@ -62,7 +61,7 @@ public sealed class LegacyDatabaseImporter
             await using var meta = connection.CreateCommand();
             meta.CommandText = "INSERT INTO legacy_imports(source_database, imported_at_utc, imported_questions, skipped_duplicates, preserved_tables) VALUES($source, $stamp, $imported, $skipped, $tables);";
             meta.Parameters.AddWithValue("$source", sourcePath);
-            meta.Parameters.AddWithValue("$stamp", stamp);
+            meta.Parameters.AddWithValue("$stamp", DateTime.UtcNow.ToString("O"));
             meta.Parameters.AddWithValue("$imported", imported);
             meta.Parameters.AddWithValue("$skipped", skipped);
             meta.Parameters.AddWithValue("$tables", tables.Count);
@@ -98,7 +97,7 @@ public sealed class LegacyDatabaseImporter
         return tables;
     }
 
-    private static async Task<(int Imported, int Skipped)> ImportQuestionsAsync(SqliteConnection connection, string sourcePath, CancellationToken cancellationToken)
+    private async Task<(int Imported, int Skipped)> ImportQuestionsAsync(SqliteConnection connection, string sourcePath, CancellationToken cancellationToken)
     {
         var existing = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         await using (var current = connection.CreateCommand())
@@ -109,7 +108,7 @@ public sealed class LegacyDatabaseImporter
                 existing.Add(Fingerprint(reader.GetString(0), JsonSerializer.Deserialize<string[]>(reader.GetString(1)) ?? [], reader.GetInt32(2), reader.GetString(3)));
         }
 
-        var assetsDirectory = Path.Combine(Path.GetDirectoryName(Path.GetDirectoryName(connection.DataSource) ?? connection.DataSource) ?? AppContext.BaseDirectory, "data", "imported-assets");
+        var assetsDirectory = Path.Combine(_dataDirectory, "imported-assets");
         Directory.CreateDirectory(assetsDirectory);
         var imported = 0;
         var skipped = 0;
@@ -157,7 +156,20 @@ public sealed class LegacyDatabaseImporter
         if (string.IsNullOrWhiteSpace(imagePath))
             return "";
         var candidates = new[] { imagePath, Path.Combine(Path.GetDirectoryName(sourceDb) ?? "", imagePath) };
-        var source = candidates.Select(Path.GetFullPath).FirstOrDefault(File.Exists);
+        string? source = null;
+        foreach (var candidate in candidates)
+        {
+            try
+            {
+                var full = Path.GetFullPath(candidate);
+                if (File.Exists(full))
+                {
+                    source = full;
+                    break;
+                }
+            }
+            catch (Exception) { }
+        }
         if (source is null)
             return imagePath;
         var destination = Path.Combine(assetsDirectory, $"{Guid.NewGuid():N}{Path.GetExtension(source)}");
@@ -166,7 +178,7 @@ public sealed class LegacyDatabaseImporter
     }
 
     private static string Fingerprint(string question, IReadOnlyList<string> answers, int correct, string category) =>
-        string.Join("\u001f", new[] { question, category, correct.ToString(), answers[0], answers[1], answers[2], answers[3] }).Trim().ToUpperInvariant();
+        string.Join("\u001f", new[] { question.Trim(), category.Trim(), correct.ToString(), answers[0].Trim(), answers[1].Trim(), answers[2].Trim(), answers[3].Trim() }).ToUpperInvariant();
 
     private static async Task EnsureImportMetadataAsync(SqliteConnection connection, CancellationToken cancellationToken)
     {
