@@ -4,7 +4,6 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
-using System.Windows.Shapes;
 using QuizManager.Core.Models;
 
 namespace QuizManager.Rendering;
@@ -78,7 +77,7 @@ public sealed class QuizVideoRenderer
     {
         const int width = 1280, height = 720;
         var root = new Grid { Width = width, Height = height, Background = new SolidColorBrush(Color.FromRgb(15, 23, 42)) };
-        root.Children.Add(new Ellipse { Width = 520, Height = 520, Fill = new SolidColorBrush(Color.FromArgb(45, 99, 102, 241)), HorizontalAlignment = HorizontalAlignment.Right, VerticalAlignment = VerticalAlignment.Top });
+        root.Children.Add(new System.Windows.Shapes.Ellipse { Width = 520, Height = 520, Fill = new SolidColorBrush(Color.FromArgb(45, 99, 102, 241)), HorizontalAlignment = HorizontalAlignment.Right, VerticalAlignment = VerticalAlignment.Top });
         var panel = new Border { Margin = new Thickness(90), Padding = new Thickness(55), CornerRadius = new CornerRadius(28), Background = new SolidColorBrush(Color.FromRgb(30, 41, 59)) };
         var stack = new StackPanel { VerticalAlignment = VerticalAlignment.Center };
         stack.Children.Add(new TextBlock { Text = "FACTBURST QUIZ", FontSize = 25, FontWeight = FontWeights.Bold, Foreground = Brushes.White, Margin = new Thickness(0, 0, 0, 24) });
