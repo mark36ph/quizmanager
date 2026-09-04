@@ -1,0 +1,124 @@
+name: Release Windows App
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Release version, for example 1.0.0"
+        required: false
+        default: ""
+  push:
+    branches: [ main ]
+    paths:
+      - "version.json"
+    tags:
+      - "v*.*.*"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: quizmanager-release
+  cancel-in-progress: false
+
+jobs:
+  release-windows:
+    runs-on: windows-latest
+    timeout-minutes: 45
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Resolve release version
+        id: version
+        shell: pwsh
+        run: |
+          if ("${{ github.event_name }}" -eq "workflow_dispatch" -and -not [string]::IsNullOrWhiteSpace("${{ inputs.version }}")) {
+            $version = "${{ inputs.version }}"
+          } elseif ("${{ github.ref_type }}" -eq "tag") {
+            $version = "${{ github.ref_name }}".TrimStart("v")
+          } else {
+            $manifest = Get-Content version.json -Raw | ConvertFrom-Json
+            $version = [string]$manifest.latest_version
+          }
+          if ($version -notmatch '^\d+\.\d+\.\d+([+-][0-9A-Za-z.-]+)?$') {
+            throw "Version must be SemVer, for example 1.0.0"
+          }
+          "version=$version" >> $env:GITHUB_OUTPUT
+
+      - name: Set up .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "8.0.x"
+
+      - name: Restore
+        run: dotnet restore QuizManager.sln
+
+      - name: Test
+        run: dotnet test tests/QuizManager.Core.Tests/QuizManager.Core.Tests.csproj --configuration Release --no-restore
+
+      - name: Publish self-contained Windows app
+        run: >-
+          dotnet publish
+          src\QuizManager.Desktop\QuizManager.Desktop.csproj
+          --configuration Release
+          --runtime win-x64
+          --self-contained true
+          -p:Version=${{ steps.version.outputs.version }}
+          -p:AssemblyVersion=${{ steps.version.outputs.version }}.0
+          -p:FileVersion=${{ steps.version.outputs.version }}.0
+          --output desktop-build\publish
+
+      - name: Restore pinned Velopack CLI
+        run: dotnet tool restore
+
+      - name: Download previous release metadata
+        continue-on-error: true
+        run: >-
+          dotnet tool run vpk --
+          download github
+          --repoUrl https://github.com/${{ github.repository }}
+          --channel win-x64-stable
+          --outputDir Releases
+
+      - name: Package Velopack release
+        run: >-
+          dotnet tool run vpk --
+          pack
+          --packId QuizManager
+          --packVersion ${{ steps.version.outputs.version }}
+          --packDir desktop-build\publish
+          --mainExe QuizManager.exe
+          --packTitle "Factburst Quiz Manager"
+          --packAuthors Factburst
+          --runtime win-x64
+          --channel win-x64-stable
+          --outputDir Releases
+
+      - name: Validate installer output
+        shell: pwsh
+        run: |
+          if (@(Get-ChildItem Releases -File -Filter "*Setup.exe").Count -eq 0) { throw "No Windows Setup.exe was produced." }
+          if (@(Get-ChildItem Releases -File -Filter "*-full.nupkg").Count -eq 0) { throw "No full update package was produced." }
+          if (@(Get-ChildItem Releases -File -Filter "releases.win-x64-stable.json").Count -eq 0) { throw "No stable update feed was produced." }
+
+      - name: Publish GitHub release
+        shell: pwsh
+        env:
+          VPK_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          dotnet tool run vpk -- upload github `
+            --repoUrl https://github.com/${{ github.repository }} `
+            --token $env:VPK_TOKEN `
+            --publish `
+            --merge `
+            --releaseName "Factburst Quiz Manager ${{ steps.version.outputs.version }}" `
+            --tag "v${{ steps.version.outputs.version }}" `
+            --targetCommitish "${{ github.sha }}" `
+            --channel win-x64-stable `
+            --outputDir Releases
