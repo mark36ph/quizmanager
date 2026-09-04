@@ -86,8 +86,8 @@ public sealed class QuizVideoRenderer
     private static void RenderFrame(QuizQuestion question, string destination, bool reveal)
     {
         var root = new Grid { Width = Width, Height = Height, Background = new SolidColorBrush(Color.FromRgb(15, 23, 42)) };
-        root.Children.Add(new EllipseShape(560, Color.FromArgb(42, 99, 102, 241), HorizontalAlignment.Right, VerticalAlignment.Top));
-        root.Children.Add(new EllipseShape(340, Color.FromArgb(32, 20, 184, 166), HorizontalAlignment.Left, VerticalAlignment.Bottom));
+        root.Children.Add(new EllipseShape(560, new SolidColorBrush(Color.FromArgb(42, 99, 102, 241)), HorizontalAlignment.Right, VerticalAlignment.Top));
+        root.Children.Add(new EllipseShape(340, new SolidColorBrush(Color.FromArgb(32, 20, 184, 166)), HorizontalAlignment.Left, VerticalAlignment.Bottom));
         var panel = new Border { Margin = new Thickness(72), Padding = new Thickness(48), CornerRadius = new CornerRadius(28), Background = new SolidColorBrush(Color.FromRgb(30, 41, 59)) };
         var stack = new StackPanel { VerticalAlignment = VerticalAlignment.Center };
         var header = new DockPanel { Margin = new Thickness(0, 0, 0, 22) };
