@@ -29,7 +29,7 @@
                 <StackPanel>
                     <Button Content="Dashboard" Height="44" Margin="0,0,0,8" />
                     <Button Content="Question Library" Height="44" Margin="0,0,0,8" Click="QuestionLibrary_Click" />
-                    <Button Content="Quiz Projects" Height="44" Margin="0,0,0,8" />
+                    <Button Content="Quiz Projects" Height="44" Margin="0,0,0,8" Click="QuizProjects_Click" />
                     <Button Content="Rendering" Height="44" Margin="0,0,0,8" />
                     <Button Content="Publishing" Height="44" Margin="0,0,0,8" />
                     <Button Content="Automation" Height="44" />
@@ -38,8 +38,11 @@
             <Border Grid.Column="1" Margin="20,0,0,0" Background="{StaticResource PanelBackground}" CornerRadius="14" Padding="28">
                 <StackPanel>
                     <TextBlock Text="Create a quiz" FontSize="24" FontWeight="SemiBold" Foreground="{StaticResource PrimaryText}" />
-                    <TextBlock Text="Build and manage your question library first. Rendering is isolated behind a dedicated STA worker so the desktop stays responsive." Margin="0,8,0,24" Foreground="{StaticResource SecondaryText}" TextWrapping="Wrap" />
-                    <Button Content="Open Question Library" Width="220" Height="44" HorizontalAlignment="Left" Click="QuestionLibrary_Click" />
+                    <TextBlock Text="Create reusable quiz projects, select the category and question count, then generate a rotated quiz from your enabled question library." Margin="0,8,0,24" Foreground="{StaticResource SecondaryText}" TextWrapping="Wrap" />
+                    <StackPanel Orientation="Horizontal">
+                        <Button Content="Open Question Library" Width="220" Height="44" HorizontalAlignment="Left" Click="QuestionLibrary_Click" />
+                        <Button Content="Open Quiz Projects" Width="180" Height="44" Margin="10,0,0,0" HorizontalAlignment="Left" Click="QuizProjects_Click" />
+                    </StackPanel>
                     <Grid Margin="0,28,0,0">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*" />
@@ -53,8 +56,8 @@
                         </Border>
                         <Border Grid.Column="1" Margin="10,0,0,0" Padding="18" CornerRadius="10" Background="#263449">
                             <StackPanel>
-                                <TextBlock Text="Updates" Foreground="{StaticResource PrimaryText}" FontSize="17" />
-                                <TextBlock Text="Installed builds can check GitHub Releases and update without replacing user data." Margin="0,8,0,0" Foreground="{StaticResource SecondaryText}" TextWrapping="Wrap" />
+                                <TextBlock Text="Quiz Projects" Foreground="{StaticResource PrimaryText}" FontSize="17" />
+                                <TextBlock Text="Save quiz definitions and generate a repeatable question set using the rotation rules." Margin="0,8,0,0" Foreground="{StaticResource SecondaryText}" TextWrapping="Wrap" />
                             </StackPanel>
                         </Border>
                     </Grid>
