@@ -14,6 +14,8 @@ public sealed class QuizDatabase
         _databasePath = databasePath;
     }
 
+    public string DatabasePath => _databasePath;
+
     public async Task InitializeAsync(CancellationToken cancellationToken = default)
     {
         var directory = Path.GetDirectoryName(_databasePath);
