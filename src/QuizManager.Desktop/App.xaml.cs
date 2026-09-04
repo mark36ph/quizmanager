@@ -1,6 +1,5 @@
 using System.IO;
 using QuizManager.Infrastructure.Data;
-using Velopack;
 
 namespace QuizManager.Desktop;
 
@@ -14,7 +13,6 @@ public partial class App : System.Windows.Application
     {
         try
         {
-            VelopackApp.Build().Run();
             base.OnStartup(e);
 
             var dataRoot = Path.Combine(
