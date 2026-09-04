@@ -8,10 +8,15 @@
     <RootNamespace>QuizManager.Desktop</RootNamespace>
     <AssemblyName>QuizManager</AssemblyName>
     <ApplicationTitle>Factburst Quiz Manager</ApplicationTitle>
+    <StartupObject>QuizManager.Desktop.Program</StartupObject>
     <Version>1.0.0</Version>
     <AssemblyVersion>1.0.0.0</AssemblyVersion>
     <FileVersion>1.0.0.0</FileVersion>
   </PropertyGroup>
+  <ItemGroup>
+    <ApplicationDefinition Remove="App.xaml" />
+    <Page Include="App.xaml" />
+  </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Velopack" Version="1.2.0" />
   </ItemGroup>
