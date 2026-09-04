@@ -43,10 +43,7 @@ public sealed class QuizDatabase
         await command.ExecuteNonQueryAsync(cancellationToken);
     }
 
-    public async Task<IReadOnlyList<QuizQuestion>> GetQuestionsAsync(
-        string? category = null,
-        bool enabledOnly = false,
-        CancellationToken cancellationToken = default)
+    public async Task<IReadOnlyList<QuizQuestion>> GetQuestionsAsync(string? category = null, bool enabledOnly = false, CancellationToken cancellationToken = default)
     {
         await using var connection = await OpenAsync(cancellationToken);
         await using var command = connection.CreateCommand();
@@ -107,16 +104,9 @@ public sealed class QuizDatabase
         await using var command = connection.CreateCommand();
         command.CommandText = """
             UPDATE questions SET
-                question = $question,
-                answers_json = $answers,
-                correct_answer_index = $correct,
-                category = $category,
-                explanation = $explanation,
-                difficulty = $difficulty,
-                source = $source,
-                times_used = $timesUsed,
-                is_enabled = $enabled,
-                image_path = $imagePath
+                question = $question, answers_json = $answers, correct_answer_index = $correct,
+                category = $category, explanation = $explanation, difficulty = $difficulty,
+                source = $source, times_used = $timesUsed, is_enabled = $enabled, image_path = $imagePath
             WHERE id = $id;
             """;
         command.Parameters.AddWithValue("$id", question.Id);
@@ -138,8 +128,9 @@ public sealed class QuizDatabase
         var values = ids.Distinct().Where(id => id > 0).ToArray();
         if (values.Length == 0)
             return;
+
         await using var connection = await OpenAsync(cancellationToken);
-        await using var transaction = await connection.BeginTransactionAsync(cancellationToken);
+        await using var transaction = (SqliteTransaction)await connection.BeginTransactionAsync(cancellationToken);
         foreach (var id in values)
         {
             await using var command = connection.CreateCommand();
@@ -161,8 +152,7 @@ public sealed class QuizDatabase
     private static QuizQuestion ReadQuestion(SqliteDataReader reader)
     {
         var answers = JsonSerializer.Deserialize<List<string>>(reader.GetString(2)) ?? [];
-        return new QuizQuestion(
-            reader.GetInt32(0), reader.GetString(1), answers, reader.GetInt32(3),
+        return new QuizQuestion(reader.GetInt32(0), reader.GetString(1), answers, reader.GetInt32(3),
             reader.GetString(4), reader.GetString(5), reader.GetString(6), reader.GetString(7),
             reader.GetInt32(8), reader.GetInt32(9) != 0, reader.GetString(10));
     }
