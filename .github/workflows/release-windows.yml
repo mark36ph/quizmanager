@@ -59,8 +59,11 @@ jobs:
       - name: Restore
         run: dotnet restore QuizManager.sln
 
+      - name: Compile release candidate
+        run: dotnet build QuizManager.sln --configuration Release --no-restore
+
       - name: Test
-        run: dotnet test tests/QuizManager.Core.Tests/QuizManager.Core.Tests.csproj --configuration Release --no-restore
+        run: dotnet test tests/QuizManager.Core.Tests/QuizManager.Core.Tests.csproj --configuration Release --no-build --no-restore
 
       - name: Publish self-contained Windows app
         run: >-
