@@ -143,7 +143,7 @@ public sealed class LegacyDatabaseImporter
         }
     }
 
-    private static async Task<(int Imported, int Skipped)> ImportQuestionsAsync(SqliteConnection connection, SqliteTransaction transaction, string sourcePath, CancellationToken cancellationToken)
+    private async Task<(int Imported, int Skipped)> ImportQuestionsAsync(SqliteConnection connection, SqliteTransaction transaction, string sourcePath, CancellationToken cancellationToken)
     {
         var existing = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
         await using (var current = connection.CreateCommand())
@@ -267,7 +267,7 @@ public sealed class LegacyDatabaseImporter
             await using var insert = connection.CreateCommand();
             insert.Transaction = transaction;
             insert.CommandText = "INSERT OR IGNORE INTO imported_quiz_history(legacy_id,title,created,question_count,categories,format,question_seconds,shuffle_answers,project_folder,series_name,episode_number,youtube_title,youtube_description,youtube_hashtags,pinned_comment,published_on_youtube,youtube_url,youtube_views,youtube_likes,youtube_upload_date,published_on_facebook,facebook_url,published_on_instagram,instagram_url,instagram_upload_date,youtube_first_comment_id,facebook_first_comment_id,youtube_privacy,youtube_scheduled_for,facebook_scheduled_for) VALUES($id,$title,$created,$count,$categories,$format,$seconds,$shuffle,$folder,$series,$episode,$ytTitle,$ytDesc,$hashtags,$comment,$ytPub,$ytUrl,$ytViews,$ytLikes,$ytDate,$fbPub,$fbUrl,$igPub,$igUrl,$igDate,$ytComment,$fbComment,$privacy,$ytSchedule,$fbSchedule);";
-            AddReaderParameter(insert,"$id",reader,0); AddReaderParameter(insert,"$title",reader,1); AddReaderParameter(insert,"$created",reader,2); AddReaderParameter(insert,"$count",reader,3); AddReaderParameter(insert,"$categories",reader,4); AddReaderParameter(insert,"$format",reader,5); AddReaderParameter(insert,"$seconds",reader,6); AddReaderParameter(insert,"$shuffle",reader,7); AddReaderParameter(insert,"$folder",reader,8); AddReaderParameter(insert,"$series",reader,9); AddReaderParameter(insert,"$episode",reader,10); AddReaderParameter(insert,"$ytTitle",reader,11); AddReaderParameter(insert,"$ytDesc",reader,12); AddReaderParameter(insert,"$hashtags",reader,13); AddReaderParameter(insert,"$comment",reader,14); AddReaderParameter(insert,"$ytPub",reader,15); AddReaderParameter(insert,"$ytUrl",reader,16); AddReaderParameter(insert,"$ytViews",reader,17); AddReaderParameter(insert,"$ytLikes",reader,18); AddReaderParameter(insert,"$ytDate",reader,19); AddReaderParameter(insert,"$fbPub",reader,20); AddReaderParameter(insert,"$fbUrl",reader,21); AddReaderParameter(insert,"$igPub",reader,22); AddReaderParameter(insert,"$igUrl",reader,23); AddReaderParameter(insert,"$igDate",reader,24); AddReaderParameter(insert,"$ytComment",reader,25); AddReaderParameter(insert,"$fbComment",reader,26); AddReaderParameter(insert,"$privacy",reader,27); AddReaderParameter(insert,"$ytSchedule",reader,28); AddReaderParameter(insert,"$fbSchedule",reader,29);
+            AddReaderParameter(insert,"$id",reader,0); AddReaderParameter(insert,"$title",reader,1); AddReaderParameter(insert,"$created",reader,2); AddReaderParameter(insert,"$count",reader,3); AddReaderParameter(insert,"$categories",reader,4); AddReaderParameter(insert,"$format",reader,5); AddReaderParameter(insert,"$seconds",reader,6); AddReaderParameter(insert,"$shuffle",reader,7); AddReaderParameter(insert,"$folder",reader,8); AddReaderParameter(insert,"$series",reader,9); AddReaderParameter(insert,"$episode",reader,10); AddReaderParameter(insert,"$ytTitle",reader,11); AddReaderParameter(insert,"$ytDesc",reader,12); AddReaderParameter(insert,"$hashtags",reader,13); AddReaderParameter(insert,"$comment",reader,14); AddReaderParameter(insert,"$ytPub",reader,15); AddReaderParameter(insert,"$ytUrl",reader,16); AddReaderParameter(insert,"$ytViews",reader,17); AddReaderParameter(insert,"$ytLikes",reader,18); AddReaderParameter(insert,"$ytDate",reader,19); AddReaderParameter(insert,"$fbPub",reader,20); AddReaderParameter(insert,"$fbUrl",reader,21); AddReaderParameter(insert,"$fbViews",reader,22); AddReaderParameter(insert,"$fbReactions",reader,23); AddReaderParameter(insert,"$fbComments",reader,24); AddReaderParameter(insert,"$fbShares",reader,25); AddReaderParameter(insert,"$fbDate",reader,26); AddReaderParameter(insert,"$igPub",reader,27); AddReaderParameter(insert,"$igUrl",reader,28); AddReaderParameter(insert,"$igDate",reader,29); AddReaderParameter(insert,"$ytComment",reader,30); AddReaderParameter(insert,"$fbComment",reader,31); AddReaderParameter(insert,"$privacy",reader,32); AddReaderParameter(insert,"$ytSchedule",reader,33); AddReaderParameter(insert,"$fbSchedule",reader,34);
             await insert.ExecuteNonQueryAsync(cancellationToken); count++;
         }
         return count;
@@ -276,12 +276,16 @@ public sealed class LegacyDatabaseImporter
     private static async Task<int> ImportNotesAsync(SqliteConnection connection, SqliteTransaction transaction, CancellationToken cancellationToken)
     {
         if (!await TableExistsAsync(connection, transaction, "legacy_source", "fact_notes", cancellationToken)) return 0;
+        await EnsureImportedNotesTableAsync(connection, transaction, cancellationToken);
+        var count = 0;
         await using var command = connection.CreateCommand(); command.Transaction = transaction; command.CommandText = "SELECT id,title,category,notes,status,created,pinned,checked FROM legacy_source.fact_notes ORDER BY id;";
-        await using var reader = await command.ExecuteReaderAsync(cancellationToken); var count = 0;
+        await using var reader = await command.ExecuteReaderAsync(cancellationToken);
         while (await reader.ReadAsync(cancellationToken))
         {
-            await using var insert = connection.CreateCommand(); insert.Transaction = transaction; insert.CommandText = "INSERT OR IGNORE INTO imported_fact_notes(legacy_id,title,category,notes,status,created,pinned,checked) VALUES($id,$title,$category,$notes,$status,$created,$pinned,$checked);";
-            AddReaderParameter(insert,"$id",reader,0); AddReaderParameter(insert,"$title",reader,1); AddReaderParameter(insert,"$category",reader,2); AddReaderParameter(insert,"$notes",reader,3); AddReaderParameter(insert,"$status",reader,4); AddReaderParameter(insert,"$created",reader,5); AddReaderParameter(insert,"$pinned",reader,6); AddReaderParameter(insert,"$checked",reader,7); await insert.ExecuteNonQueryAsync(cancellationToken); count++;
+            await using var insert = connection.CreateCommand(); insert.Transaction = transaction;
+            insert.CommandText = "INSERT OR IGNORE INTO imported_fact_notes(legacy_id,title,category,notes,status,created,pinned,checked) VALUES($id,$title,$category,$notes,$status,$created,$pinned,$checked);";
+            AddReaderParameter(insert,"$id",reader,0); AddReaderParameter(insert,"$title",reader,1); AddReaderParameter(insert,"$category",reader,2); AddReaderParameter(insert,"$notes",reader,3); AddReaderParameter(insert,"$status",reader,4); AddReaderParameter(insert,"$created",reader,5); AddReaderParameter(insert,"$pinned",reader,6); AddReaderParameter(insert,"$checked",reader,7);
+            await insert.ExecuteNonQueryAsync(cancellationToken); count++;
         }
         return count;
     }
@@ -289,33 +293,64 @@ public sealed class LegacyDatabaseImporter
     private static async Task EnsureMigrationTablesAsync(SqliteConnection connection, SqliteTransaction transaction, CancellationToken cancellationToken)
     {
         await using var command = connection.CreateCommand(); command.Transaction = transaction;
-        command.CommandText = "CREATE TABLE IF NOT EXISTS legacy_imports(id INTEGER PRIMARY KEY AUTOINCREMENT,source_database TEXT NOT NULL,imported_at_utc TEXT NOT NULL,imported_questions INTEGER NOT NULL,skipped_duplicates INTEGER NOT NULL,imported_categories INTEGER NOT NULL DEFAULT 0,imported_projects INTEGER NOT NULL DEFAULT 0,imported_history INTEGER NOT NULL DEFAULT 0,imported_notes INTEGER NOT NULL DEFAULT 0,preserved_tables INTEGER NOT NULL); CREATE TABLE IF NOT EXISTS legacy_question_map(legacy_id INTEGER PRIMARY KEY,quiz_manager_id INTEGER NOT NULL); CREATE TABLE IF NOT EXISTS categories(id INTEGER PRIMARY KEY AUTOINCREMENT,name TEXT NOT NULL UNIQUE); CREATE TABLE IF NOT EXISTS legacy_project_metadata(legacy_id INTEGER PRIMARY KEY,quiz_manager_id INTEGER NOT NULL,status TEXT,folder TEXT,script TEXT,on_screen_text TEXT,visual_plan TEXT,pinned_comment TEXT,notes TEXT,views INTEGER,likes INTEGER,upload_date TEXT,youtube_url TEXT,pinned INTEGER,updated TEXT,scheduled_for TEXT,search_terms TEXT,broll_plan TEXT,thumbnail_prompt TEXT,tags TEXT,sources TEXT,subtitle_text TEXT,narration_duration REAL,research_complete INTEGER,script_complete INTEGER,voice_complete INTEGER,subtitles_complete INTEGER,broll_complete INTEGER,graphics_complete INTEGER,capcut_complete INTEGER,export_complete INTEGER,upload_complete INTEGER);";
+        command.CommandText = """
+            CREATE TABLE IF NOT EXISTS legacy_imports(id INTEGER PRIMARY KEY AUTOINCREMENT, source_database TEXT NOT NULL, imported_at_utc TEXT NOT NULL, imported_questions INTEGER NOT NULL, skipped_duplicates INTEGER NOT NULL, imported_categories INTEGER NOT NULL, imported_projects INTEGER NOT NULL, imported_history INTEGER NOT NULL, imported_notes INTEGER NOT NULL, preserved_tables INTEGER NOT NULL);
+            CREATE TABLE IF NOT EXISTS legacy_question_map(legacy_id INTEGER PRIMARY KEY, quiz_manager_id INTEGER NOT NULL);
+            CREATE TABLE IF NOT EXISTS legacy_project_metadata(legacy_id INTEGER PRIMARY KEY, quiz_manager_id INTEGER NOT NULL, status TEXT NOT NULL DEFAULT '', folder TEXT NOT NULL DEFAULT '', script TEXT NOT NULL DEFAULT '', on_screen_text TEXT NOT NULL DEFAULT '', visual_plan TEXT NOT NULL DEFAULT '', pinned_comment TEXT NOT NULL DEFAULT '', notes TEXT NOT NULL DEFAULT '', views INTEGER NOT NULL DEFAULT 0, likes INTEGER NOT NULL DEFAULT 0, upload_date TEXT NOT NULL DEFAULT '', youtube_url TEXT NOT NULL DEFAULT '', pinned INTEGER NOT NULL DEFAULT 0, updated TEXT NOT NULL DEFAULT '', scheduled_for TEXT NOT NULL DEFAULT '', search_terms TEXT NOT NULL DEFAULT '', broll_plan TEXT NOT NULL DEFAULT '', thumbnail_prompt TEXT NOT NULL DEFAULT '', tags TEXT NOT NULL DEFAULT '', sources TEXT NOT NULL DEFAULT '', subtitle_text TEXT NOT NULL DEFAULT '', narration_duration REAL NOT NULL DEFAULT 0, research_complete INTEGER NOT NULL DEFAULT 0, script_complete INTEGER NOT NULL DEFAULT 0, voice_complete INTEGER NOT NULL DEFAULT 0, subtitles_complete INTEGER NOT NULL DEFAULT 0, broll_complete INTEGER NOT NULL DEFAULT 0, graphics_complete INTEGER NOT NULL DEFAULT 0, capcut_complete INTEGER NOT NULL DEFAULT 0, export_complete INTEGER NOT NULL DEFAULT 0, upload_complete INTEGER NOT NULL DEFAULT 0);
+            """;
         await command.ExecuteNonQueryAsync(cancellationToken);
     }
 
     private static async Task EnsureImportedHistoryTablesAsync(SqliteConnection connection, SqliteTransaction transaction, CancellationToken cancellationToken)
     {
         await using var command = connection.CreateCommand(); command.Transaction = transaction;
-        command.CommandText = "CREATE TABLE IF NOT EXISTS imported_quiz_history(legacy_id INTEGER PRIMARY KEY,title TEXT,created TEXT,question_count INTEGER,categories TEXT,format TEXT,question_seconds REAL,shuffle_answers INTEGER,project_folder TEXT,series_name TEXT,episode_number INTEGER,youtube_title TEXT,youtube_description TEXT,youtube_hashtags TEXT,pinned_comment TEXT,published_on_youtube INTEGER,youtube_url TEXT,youtube_views INTEGER,youtube_likes INTEGER,youtube_upload_date TEXT,published_on_facebook INTEGER,facebook_url TEXT,published_on_instagram INTEGER,instagram_url TEXT,instagram_upload_date TEXT,youtube_first_comment_id TEXT,facebook_first_comment_id TEXT,youtube_privacy TEXT,youtube_scheduled_for TEXT,facebook_scheduled_for TEXT); CREATE TABLE IF NOT EXISTS imported_fact_notes(legacy_id INTEGER PRIMARY KEY,title TEXT,category TEXT,notes TEXT,status TEXT,created TEXT,pinned INTEGER,checked INTEGER);";
+        command.CommandText = "CREATE TABLE IF NOT EXISTS imported_quiz_history(id INTEGER PRIMARY KEY AUTOINCREMENT, legacy_id INTEGER UNIQUE NOT NULL, title TEXT NOT NULL, created TEXT NOT NULL, question_count INTEGER NOT NULL, categories TEXT NOT NULL, format TEXT NOT NULL, question_seconds INTEGER NOT NULL, shuffle_answers INTEGER NOT NULL, project_folder TEXT NOT NULL, series_name TEXT NOT NULL, episode_number INTEGER NOT NULL, youtube_title TEXT NOT NULL, youtube_description TEXT NOT NULL, youtube_hashtags TEXT NOT NULL, pinned_comment TEXT NOT NULL, published_on_youtube INTEGER NOT NULL, youtube_url TEXT NOT NULL, youtube_views INTEGER NOT NULL, youtube_likes INTEGER NOT NULL, youtube_upload_date TEXT NOT NULL, published_on_facebook INTEGER NOT NULL, facebook_url TEXT NOT NULL, facebook_views INTEGER NOT NULL, facebook_reactions INTEGER NOT NULL, facebook_comments INTEGER NOT NULL, facebook_shares INTEGER NOT NULL, facebook_upload_date TEXT NOT NULL, published_on_instagram INTEGER NOT NULL, instagram_url TEXT NOT NULL, instagram_upload_date TEXT NOT NULL, youtube_first_comment_id TEXT NOT NULL, facebook_first_comment_id TEXT NOT NULL, youtube_privacy TEXT NOT NULL, youtube_scheduled_for TEXT NOT NULL, facebook_scheduled_for TEXT NOT NULL);";
+        await command.ExecuteNonQueryAsync(cancellationToken);
+    }
+
+    private static async Task EnsureImportedNotesTableAsync(SqliteConnection connection, SqliteTransaction transaction, CancellationToken cancellationToken)
+    {
+        await using var command = connection.CreateCommand(); command.Transaction = transaction;
+        command.CommandText = "CREATE TABLE IF NOT EXISTS imported_fact_notes(id INTEGER PRIMARY KEY AUTOINCREMENT, legacy_id INTEGER UNIQUE NOT NULL, title TEXT NOT NULL, category TEXT NOT NULL, notes TEXT NOT NULL, status TEXT NOT NULL, created TEXT NOT NULL, pinned INTEGER NOT NULL, checked INTEGER NOT NULL);";
         await command.ExecuteNonQueryAsync(cancellationToken);
     }
 
     private static async Task<bool> TableExistsAsync(SqliteConnection connection, SqliteTransaction transaction, string schema, string table, CancellationToken cancellationToken)
     {
-        await using var command = connection.CreateCommand(); command.Transaction = transaction; command.CommandText = $"SELECT COUNT(*) FROM {schema}.sqlite_master WHERE type='table' AND name=$name;"; command.Parameters.AddWithValue("$name",table); return Convert.ToInt32(await command.ExecuteScalarAsync(cancellationToken)) > 0;
+        await using var command = connection.CreateCommand(); command.Transaction = transaction;
+        command.CommandText = $"SELECT COUNT(*) FROM {QuoteIdentifier(schema)}.sqlite_master WHERE type='table' AND name=$name;";
+        command.Parameters.AddWithValue("$name", table);
+        return Convert.ToInt32(await command.ExecuteScalarAsync(cancellationToken)) > 0;
     }
 
-    private static void AddReaderParameter(SqliteCommand command, string name, SqliteDataReader reader, int ordinal) => command.Parameters.AddWithValue(name, reader.IsDBNull(ordinal) ? DBNull.Value : reader.GetValue(ordinal));
+    private static void AddReaderParameter(SqliteCommand command, string name, SqliteDataReader reader, int ordinal)
+    {
+        command.Parameters.AddWithValue(name, reader.IsDBNull(ordinal) ? DBNull.Value : reader.GetValue(ordinal));
+    }
+
     private static string NormalizeDate(string value) => DateTime.TryParse(value, out var parsed) ? parsed.ToUniversalTime().ToString("O") : value;
+
     private static string CopyAssetIfAvailable(string imagePath, string sourceDb, string assetsDirectory)
     {
         if (string.IsNullOrWhiteSpace(imagePath)) return "";
-        foreach (var candidate in new[] { imagePath, Path.Combine(Path.GetDirectoryName(sourceDb) ?? "", imagePath) })
+        var candidates = new[] { imagePath, Path.Combine(Path.GetDirectoryName(sourceDb) ?? "", imagePath) };
+        foreach (var candidate in candidates)
         {
-            try { var full = Path.GetFullPath(candidate); if (!File.Exists(full)) continue; var destination = Path.Combine(assetsDirectory, $"{Guid.NewGuid():N}{Path.GetExtension(full)}"); File.Copy(full,destination,false); return destination; } catch { }
+            try
+            {
+                var full = Path.GetFullPath(candidate);
+                if (!File.Exists(full)) continue;
+                var destination = Path.Combine(assetsDirectory, $"{Guid.NewGuid():N}{Path.GetExtension(full)}");
+                File.Copy(full, destination, overwrite: false);
+                return destination;
+            }
+            catch { }
         }
         return imagePath;
     }
-    private static string Fingerprint(string question, IReadOnlyList<string> answers, int correct, string category) => string.Join("\u001f", new[] { question.Trim(), category.Trim(), correct.ToString(), answers[0].Trim(), answers[1].Trim(), answers[2].Trim(), answers[3].Trim() }).ToUpperInvariant();
+
+    private static string Fingerprint(string question, IReadOnlyList<string> answers, int correct, string category) =>
+        string.Join("\u001f", new[] { question.Trim(), category.Trim(), correct.ToString(), answers[0].Trim(), answers[1].Trim(), answers[2].Trim(), answers[3].Trim() }).ToUpperInvariant();
+
     private static string QuoteIdentifier(string value) => "\"" + value.Replace("\"", "\"\"") + "\"";
 }
