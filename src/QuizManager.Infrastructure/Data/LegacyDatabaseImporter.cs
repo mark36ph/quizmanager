@@ -47,10 +47,12 @@ public sealed class LegacyDatabaseImporter
         await connection.OpenAsync(cancellationToken);
         await using var transaction = (SqliteTransaction)await connection.BeginTransactionAsync(cancellationToken);
 
+        var attached = false;
         try
         {
             await EnsureMigrationTablesAsync(connection, transaction, cancellationToken);
             await AttachSourceAsync(connection, transaction, sourcePath, cancellationToken);
+            attached = true;
 
             var tables = await GetSourceTablesAsync(connection, transaction, cancellationToken);
             await PreserveLegacyTablesAsync(connection, transaction, tables, cancellationToken);
@@ -62,8 +64,12 @@ public sealed class LegacyDatabaseImporter
             var notes = await CountSourceRowsAsync(connection, transaction, "fact_notes", cancellationToken);
 
             await RecordImportAsync(connection, transaction, sourcePath, questionImport, categories, projects, history, notes, tables.Count, cancellationToken);
-            await DetachSourceAsync(connection, transaction, cancellationToken);
             await transaction.CommitAsync(cancellationToken);
+
+            // SQLite cannot reliably DETACH an attached database while the transaction
+            // that created/copied from it is still active. Commit first, then detach.
+            await DetachSourceAsync(connection, sourcePath, cancellationToken);
+            attached = false;
 
             return new LegacyImportResult(
                 questionImport.Imported,
@@ -80,9 +86,19 @@ public sealed class LegacyDatabaseImporter
         {
             try
             {
-                await DetachSourceAsync(connection, transaction, cancellationToken);
+                await transaction.RollbackAsync(CancellationToken.None);
             }
             catch { }
+
+            if (attached)
+            {
+                try
+                {
+                    await DetachSourceAsync(connection, sourcePath, CancellationToken.None);
+                }
+                catch { }
+            }
+
             throw;
         }
     }
@@ -96,12 +112,13 @@ public sealed class LegacyDatabaseImporter
         await attach.ExecuteNonQueryAsync(cancellationToken);
     }
 
-    private static async Task DetachSourceAsync(SqliteConnection connection, SqliteTransaction transaction, CancellationToken cancellationToken)
+    private static async Task DetachSourceAsync(SqliteConnection connection, string sourcePath, CancellationToken cancellationToken)
     {
+        SqliteConnection.ClearAllPools();
         await using var detach = connection.CreateCommand();
-        detach.Transaction = transaction;
         detach.CommandText = "DETACH DATABASE legacy_source;";
         await detach.ExecuteNonQueryAsync(cancellationToken);
+        SqliteConnection.ClearAllPools();
     }
 
     private async Task<string> CreateBackupAsync(CancellationToken cancellationToken)
