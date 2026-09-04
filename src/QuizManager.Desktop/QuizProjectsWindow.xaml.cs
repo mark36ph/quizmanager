@@ -7,12 +7,14 @@ namespace QuizManager.Desktop;
 public partial class QuizProjectsWindow : System.Windows.Window
 {
     private readonly QuizProjectService _projects;
+    private readonly QuestionLibraryService _library;
     private readonly ObservableCollection<QuizProject> _projectItems = [];
     private int _selectedId;
 
-    public QuizProjectsWindow(QuizProjectService projects)
+    public QuizProjectsWindow(QuizProjectService projects, QuestionLibraryService library)
     {
         _projects = projects;
+        _library = library;
         InitializeComponent();
         ProjectsList.ItemsSource = _projectItems;
         _ = LoadAsync();
@@ -22,7 +24,7 @@ public partial class QuizProjectsWindow : System.Windows.Window
     {
         try
         {
-            var categories = await _projects.GetCategoriesAsync();
+            var categories = await _library.GetCategoriesAsync();
             CategoryBox.Items.Clear();
             CategoryBox.Items.Add("All categories");
             foreach (var category in categories)
@@ -83,14 +85,15 @@ public partial class QuizProjectsWindow : System.Windows.Window
             if (category == "All categories")
                 category = "";
 
+            var existing = _projectItems.FirstOrDefault(p => p.Id == _selectedId);
             var project = new QuizProject(
                 _selectedId,
                 NameText.Text,
                 category ?? "",
                 count,
                 DescriptionText.Text,
-                _projectItems.FirstOrDefault(p => p.Id == _selectedId)?.CreatedAtUtc ?? DateTime.UtcNow,
-                _projectItems.FirstOrDefault(p => p.Id == _selectedId)?.LastGeneratedAtUtc,
+                existing?.CreatedAtUtc ?? DateTime.UtcNow,
+                existing?.LastGeneratedAtUtc,
                 EnabledBox.IsChecked == true);
 
             if (_selectedId == 0)
@@ -163,7 +166,7 @@ public partial class QuizProjectsWindow : System.Windows.Window
         public GeneratedQuestion(int number, QuizQuestion question)
         {
             Number = number;
-            Question = question.Question;
+            Question = $"{number}. {question.Question}";
             AnswerA = $"A. {question.Answers.ElementAtOrDefault(0) ?? ""}";
             AnswerB = $"B. {question.Answers.ElementAtOrDefault(1) ?? ""}";
             AnswerC = $"C. {question.Answers.ElementAtOrDefault(2) ?? ""}";
