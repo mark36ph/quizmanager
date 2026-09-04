@@ -33,7 +33,16 @@ public sealed class QuestionLibraryService
         IReadOnlySet<int>? recentlyUsed = null,
         CancellationToken cancellationToken = default)
     {
-        var questions = await _database.GetQuestionsAsync(category, enabledOnly: true, cancellationToken);
+        if (count < 1)
+            throw new ArgumentOutOfRangeException(nameof(count), "Question count must be at least 1.");
+
+        var normalizedCategory = string.Equals(category.Trim(), "All categories", StringComparison.OrdinalIgnoreCase)
+            ? null
+            : category;
+        var questions = await _database.GetQuestionsAsync(normalizedCategory, enabledOnly: true, cancellationToken);
+        if (questions.Count < count)
+            throw new InvalidOperationException($"Only {questions.Count} enabled questions are available for this project, but {count} are required.");
+
         var selected = QuizRotationSelector.Select(questions, count, preferLeastUsed: true, recentlyUsed);
         await _database.IncrementUsageAsync(selected.Select(q => q.Id), cancellationToken);
         return selected;
