@@ -1,3 +1,4 @@
+using System.Windows.Threading;
 using QuizManager.Infrastructure.Data;
 using Velopack;
 
@@ -7,6 +8,9 @@ public partial class MainWindow : System.Windows.Window
 {
     private readonly QuestionLibraryService _questionLibrary;
     private readonly AppUpdateService _updates;
+    private readonly DispatcherTimer _updateTimer;
+    private bool _updateCheckInProgress;
+    private string? _lastAlertedVersion;
 
     public MainWindow(QuestionLibraryService questionLibrary, AppUpdateService updates)
     {
@@ -14,6 +18,63 @@ public partial class MainWindow : System.Windows.Window
         _updates = updates;
         InitializeComponent();
         VersionText.Text = $"v{_updates.CurrentVersion}";
+
+        _updateTimer = new DispatcherTimer
+        {
+            Interval = TimeSpan.FromMinutes(30)
+        };
+        _updateTimer.Tick += UpdateTimer_Tick;
+        _updateTimer.Start();
+
+        Loaded += MainWindow_Loaded;
+        Closed += (_, _) => _updateTimer.Stop();
+    }
+
+    private async void MainWindow_Loaded(object sender, System.Windows.RoutedEventArgs e)
+    {
+        Loaded -= MainWindow_Loaded;
+        await CheckForUpdateSilentlyAsync();
+    }
+
+    private async void UpdateTimer_Tick(object? sender, EventArgs e)
+    {
+        await CheckForUpdateSilentlyAsync();
+    }
+
+    private async Task CheckForUpdateSilentlyAsync()
+    {
+        if (!_updates.IsInstalled || _updateCheckInProgress)
+            return;
+
+        _updateCheckInProgress = true;
+        try
+        {
+            var update = await _updates.CheckAsync();
+            if (update is null)
+                return;
+
+            var availableVersion = update.TargetFullRelease.Version.ToString();
+            if (string.Equals(_lastAlertedVersion, availableVersion, StringComparison.OrdinalIgnoreCase))
+                return;
+
+            _lastAlertedVersion = availableVersion;
+            var result = System.Windows.MessageBox.Show(
+                $"Factburst Quiz Manager {availableVersion} is available.\n\nWould you like to install the update now?\n\nYour user data is kept outside the installed application.",
+                "Update Available",
+                System.Windows.MessageBoxButton.YesNo,
+                System.Windows.MessageBoxImage.Information);
+
+            if (result == System.Windows.MessageBoxResult.Yes)
+                await InstallUpdateAsync(update);
+        }
+        catch
+        {
+            // Automatic checks are intentionally silent when GitHub is unavailable.
+        }
+        finally
+        {
+            _updateCheckInProgress = false;
+        }
     }
 
     private void QuestionLibrary_Click(object sender, System.Windows.RoutedEventArgs e)
@@ -74,11 +135,7 @@ public partial class MainWindow : System.Windows.Window
             if (resultUpdate != System.Windows.MessageBoxResult.Yes)
                 return;
 
-            UpdateButton.Content = "Downloading…";
-            await _updates.InstallAsync(update, percent =>
-            {
-                Dispatcher.Invoke(() => UpdateButton.Content = $"Downloading {percent}%");
-            });
+            await InstallUpdateAsync(update);
         }
         catch (Exception ex)
         {
@@ -93,5 +150,15 @@ public partial class MainWindow : System.Windows.Window
             UpdateButton.Content = originalText;
             UpdateButton.IsEnabled = true;
         }
+    }
+
+    private async Task InstallUpdateAsync(UpdateInfo update)
+    {
+        UpdateButton.IsEnabled = false;
+        UpdateButton.Content = "Downloading…";
+        await _updates.InstallAsync(update, percent =>
+        {
+            Dispatcher.Invoke(() => UpdateButton.Content = $"Downloading {percent}%");
+        });
     }
 }
