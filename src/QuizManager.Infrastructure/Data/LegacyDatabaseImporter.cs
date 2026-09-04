@@ -91,9 +91,9 @@ public sealed class LegacyDatabaseImporter
         await using var command = connection.CreateCommand();
         command.CommandText = "SELECT name FROM legacy_source.sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%' ORDER BY name;";
         var tables = new List<string>();
-        await using var reader = await command.ExecuteReaderAsync(cancellationToken);
-        while (await reader.ReadAsync(cancellationToken))
-            tables.Add(reader.GetString(0));
+        await using var tableReader = await command.ExecuteReaderAsync(cancellationToken);
+        while (await tableReader.ReadAsync(cancellationToken))
+            tables.Add(tableReader.GetString(0));
         return tables;
     }
 
@@ -103,9 +103,9 @@ public sealed class LegacyDatabaseImporter
         await using (var current = connection.CreateCommand())
         {
             current.CommandText = "SELECT question, answers_json, correct_answer_index, category FROM questions;";
-            await using var reader = await current.ExecuteReaderAsync(cancellationToken);
-            while (await reader.ReadAsync(cancellationToken))
-                existing.Add(Fingerprint(reader.GetString(0), JsonSerializer.Deserialize<string[]>(reader.GetString(1)) ?? [], reader.GetInt32(2), reader.GetString(3)));
+            await using var existingReader = await current.ExecuteReaderAsync(cancellationToken);
+            while (await existingReader.ReadAsync(cancellationToken))
+                existing.Add(Fingerprint(existingReader.GetString(0), JsonSerializer.Deserialize<string[]>(existingReader.GetString(1)) ?? [], existingReader.GetInt32(2), existingReader.GetString(3)));
         }
 
         var assetsDirectory = Path.Combine(_dataDirectory, "imported-assets");
@@ -117,13 +117,13 @@ public sealed class LegacyDatabaseImporter
         await source.OpenAsync(cancellationToken);
         await using var readerCommand = source.CreateCommand();
         readerCommand.CommandText = "SELECT question, option_a, option_b, option_c, option_d, correct_index, explanation, category, difficulty, source, times_used, enabled, image_path FROM quiz_questions ORDER BY id;";
-        await using var reader = await readerCommand.ExecuteReaderAsync(cancellationToken);
-        while (await reader.ReadAsync(cancellationToken))
+        await using var questionReader = await readerCommand.ExecuteReaderAsync(cancellationToken);
+        while (await questionReader.ReadAsync(cancellationToken))
         {
-            var question = reader.GetString(0);
-            var answers = new[] { reader.GetString(1), reader.GetString(2), reader.GetString(3), reader.GetString(4) };
-            var correct = reader.GetInt32(5);
-            var category = reader.GetString(7);
+            var question = questionReader.GetString(0);
+            var answers = new[] { questionReader.GetString(1), questionReader.GetString(2), questionReader.GetString(3), questionReader.GetString(4) };
+            var correct = questionReader.GetInt32(5);
+            var category = questionReader.GetString(7);
             var key = Fingerprint(question, answers, correct, category);
             if (!existing.Add(key))
             {
@@ -131,7 +131,7 @@ public sealed class LegacyDatabaseImporter
                 continue;
             }
 
-            var imagePath = reader.IsDBNull(12) ? "" : reader.GetString(12);
+            var imagePath = questionReader.IsDBNull(12) ? "" : questionReader.GetString(12);
             imagePath = CopyAssetIfAvailable(imagePath, sourcePath, assetsDirectory);
             await using var insert = connection.CreateCommand();
             insert.CommandText = "INSERT INTO questions(question, answers_json, correct_answer_index, category, explanation, difficulty, source, times_used, is_enabled, image_path) VALUES($question, $answers, $correct, $category, $explanation, $difficulty, $source, $timesUsed, $enabled, $imagePath);";
@@ -139,11 +139,11 @@ public sealed class LegacyDatabaseImporter
             insert.Parameters.AddWithValue("$answers", JsonSerializer.Serialize(answers));
             insert.Parameters.AddWithValue("$correct", correct);
             insert.Parameters.AddWithValue("$category", category);
-            insert.Parameters.AddWithValue("$explanation", reader.GetString(6));
-            insert.Parameters.AddWithValue("$difficulty", reader.GetString(8));
-            insert.Parameters.AddWithValue("$source", reader.GetString(9));
-            insert.Parameters.AddWithValue("$timesUsed", reader.GetInt32(10));
-            insert.Parameters.AddWithValue("$enabled", reader.GetInt32(11));
+            insert.Parameters.AddWithValue("$explanation", questionReader.GetString(6));
+            insert.Parameters.AddWithValue("$difficulty", questionReader.GetString(8));
+            insert.Parameters.AddWithValue("$source", questionReader.GetString(9));
+            insert.Parameters.AddWithValue("$timesUsed", questionReader.GetInt32(10));
+            insert.Parameters.AddWithValue("$enabled", questionReader.GetInt32(11));
             insert.Parameters.AddWithValue("$imagePath", imagePath);
             await insert.ExecuteNonQueryAsync(cancellationToken);
             imported++;
