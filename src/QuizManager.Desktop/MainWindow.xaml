@@ -13,10 +13,11 @@
         <Grid>
             <StackPanel>
                 <TextBlock Text="Factburst Quiz Manager" FontSize="30" FontWeight="SemiBold" Foreground="{StaticResource PrimaryText}" />
-                <TextBlock Text="V2 • responsive quiz creation workspace" Margin="0,6,0,0" FontSize="14" Foreground="{StaticResource SecondaryText}" />
+                <TextBlock Text="V2 • full quiz creation, rendering and publishing workspace" Margin="0,6,0,0" FontSize="14" Foreground="{StaticResource SecondaryText}" />
             </StackPanel>
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Top">
                 <TextBlock x:Name="VersionText" VerticalAlignment="Center" Margin="0,0,14,0" Foreground="{StaticResource SecondaryText}" />
+                <Button Content="Import Legacy Database" Padding="16,9" Margin="0,0,8,0" Click="ImportLegacy_Click" />
                 <Button x:Name="UpdateButton" Content="Check for Updates" Padding="16,9" Click="Update_Click" />
             </StackPanel>
         </Grid>
@@ -38,12 +39,19 @@
             <Border Grid.Column="1" Margin="20,0,0,0" Background="{StaticResource PanelBackground}" CornerRadius="14" Padding="28">
                 <StackPanel>
                     <TextBlock Text="Create a quiz" FontSize="24" FontWeight="SemiBold" Foreground="{StaticResource PrimaryText}" />
-                    <TextBlock Text="Create reusable quiz projects, select the category and question count, then generate a rotated quiz from your enabled question library." Margin="0,8,0,24" Foreground="{StaticResource SecondaryText}" TextWrapping="Wrap" />
+                    <TextBlock Text="Build reusable quiz projects, select the category and question count, then generate a rotated quiz from your enabled question library." Margin="0,8,0,24" Foreground="{StaticResource SecondaryText}" TextWrapping="Wrap" />
                     <StackPanel Orientation="Horizontal">
                         <Button Content="Open Question Library" Width="220" Height="44" HorizontalAlignment="Left" Click="QuestionLibrary_Click" />
                         <Button Content="Open Quiz Projects" Width="180" Height="44" Margin="10,0,0,0" HorizontalAlignment="Left" Click="QuizProjects_Click" />
                     </StackPanel>
-                    <Grid Margin="0,28,0,0">
+                    <Border Margin="0,24,0,0" Padding="18" CornerRadius="10" Background="#263449">
+                        <StackPanel>
+                            <TextBlock Text="Bring your existing FactVault Manager data" Foreground="{StaticResource PrimaryText}" FontSize="17" />
+                            <TextBlock Text="Import the original factvault.db without overwriting your current V2 database. The importer keeps a full copy of every legacy table and brings the question library into the new format, including usage, enabled state and available images." Margin="0,8,0,12" Foreground="{StaticResource SecondaryText}" TextWrapping="Wrap" />
+                            <Button Content="Import Existing Database" Width="220" Height="40" HorizontalAlignment="Left" Click="ImportLegacy_Click" />
+                        </StackPanel>
+                    </Border>
+                    <Grid Margin="0,24,0,0">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*" />
                             <ColumnDefinition Width="*" />
