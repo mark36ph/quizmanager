@@ -33,7 +33,7 @@ public partial class QuizProjectsWindow : System.Windows.Window
 
             // Promote projects preserved by the legacy database importer into the
             // native V2 list. The legacy rows remain available for future parity work.
-            await new LegacyProjectMigrationService(((App)Application.Current).Database.DatabasePath)
+            await new LegacyProjectMigrationService(((App)System.Windows.Application.Current).Database.DatabasePath)
                 .MigrateAsync();
 
             var projects = await _projects.GetAsync();
