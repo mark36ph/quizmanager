@@ -22,13 +22,9 @@ public partial class MainWindow : System.Windows.Window
         InitializeComponent();
         VersionText.Text = $"v{_updates.CurrentVersion}";
 
-        _updateTimer = new DispatcherTimer
-        {
-            Interval = TimeSpan.FromMinutes(30)
-        };
+        _updateTimer = new DispatcherTimer { Interval = TimeSpan.FromMinutes(30) };
         _updateTimer.Tick += UpdateTimer_Tick;
         _updateTimer.Start();
-
         Loaded += MainWindow_Loaded;
         Closed += (_, _) => _updateTimer.Stop();
     }
@@ -39,34 +35,25 @@ public partial class MainWindow : System.Windows.Window
         await CheckForUpdateSilentlyAsync();
     }
 
-    private async void UpdateTimer_Tick(object? sender, EventArgs e)
-    {
-        await CheckForUpdateSilentlyAsync();
-    }
+    private async void UpdateTimer_Tick(object? sender, EventArgs e) => await CheckForUpdateSilentlyAsync();
 
     private async Task CheckForUpdateSilentlyAsync()
     {
         if (!_updates.IsInstalled || _updateCheckInProgress)
             return;
-
         _updateCheckInProgress = true;
         try
         {
             var update = await _updates.CheckAsync();
             if (update is null)
                 return;
-
             var availableVersion = update.TargetFullRelease.Version.ToString();
             if (string.Equals(_lastAlertedVersion, availableVersion, StringComparison.OrdinalIgnoreCase))
                 return;
-
             _lastAlertedVersion = availableVersion;
             var result = System.Windows.MessageBox.Show(
                 $"Factburst Quiz Manager {availableVersion} is available.\n\nWould you like to install the update now?\n\nYour user data is kept outside the installed application.",
-                "Update Available",
-                System.Windows.MessageBoxButton.YesNo,
-                System.Windows.MessageBoxImage.Information);
-
+                "Update Available", System.Windows.MessageBoxButton.YesNo, System.Windows.MessageBoxImage.Information);
             if (result == System.Windows.MessageBoxResult.Yes)
                 await InstallUpdateAsync(update);
         }
@@ -82,19 +69,13 @@ public partial class MainWindow : System.Windows.Window
 
     private void QuestionLibrary_Click(object sender, System.Windows.RoutedEventArgs e)
     {
-        var window = new QuestionLibraryWindow(_questionLibrary)
-        {
-            Owner = this
-        };
+        var window = new QuestionLibraryWindow(_questionLibrary) { Owner = this };
         window.ShowDialog();
     }
 
     private void QuizProjects_Click(object sender, System.Windows.RoutedEventArgs e)
     {
-        var window = new QuizProjectsWindow(_quizProjects, _questionLibrary)
-        {
-            Owner = this
-        };
+        var window = new QuizProjectsWindow(_quizProjects, _questionLibrary) { Owner = this };
         window.ShowDialog();
     }
 
@@ -112,38 +93,28 @@ public partial class MainWindow : System.Windows.Window
 
         var confirm = System.Windows.MessageBox.Show(
             "Quiz Manager will create a backup of its current database before importing. Your existing V2 data will not be deleted. The original database will be preserved inside the V2 database as legacy tables, while its question library is imported into the new question format.\n\nContinue?",
-            "Import existing database",
-            System.Windows.MessageBoxButton.YesNo,
-            System.Windows.MessageBoxImage.Question);
+            "Import existing database", System.Windows.MessageBoxButton.YesNo, System.Windows.MessageBoxImage.Question);
         if (confirm != System.Windows.MessageBoxResult.Yes)
             return;
 
         try
         {
-            Mouse.OverrideCursor = System.Windows.Input.Cursors.Wait;
-            var importer = new LegacyDatabaseImporter(_questionLibraryDatabasePath());
+            System.Windows.Input.Mouse.OverrideCursor = System.Windows.Input.Cursors.Wait;
+            var importer = new LegacyDatabaseImporter(((App)System.Windows.Application.Current).Database.DatabasePath);
             var result = await importer.ImportAsync(dialog.FileName);
             System.Windows.MessageBox.Show(
-                $"Import complete.\n\nQuestions imported: {result.ImportedQuestions}\nDuplicates skipped: {result.SkippedDuplicateQuestions}\nLegacy tables preserved: {result.LegacyTablesPreserved}\n\nA backup of the current V2 database was created before the import.",
-                "Database imported",
-                System.Windows.MessageBoxButton.OK,
-                System.Windows.MessageBoxImage.Information);
+                $"Import complete.\n\nQuestions imported: {result.ImportedQuestions}\nDuplicates skipped: {result.SkippedDuplicateQuestions}\nLegacy tables preserved: {result.LegacyTablesPreserved}\n\nThe original database remains untouched, and a V2 backup was created before import.",
+                "Database imported", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Information);
         }
         catch (Exception ex)
         {
-            System.Windows.MessageBox.Show(
-                $"The database could not be imported.\n\n{ex.Message}",
-                "Import failed",
-                System.Windows.MessageBoxButton.OK,
-                System.Windows.MessageBoxImage.Error);
+            System.Windows.MessageBox.Show($"The database could not be imported.\n\n{ex.Message}", "Import failed", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
         }
         finally
         {
-            Mouse.OverrideCursor = null;
+            System.Windows.Input.Mouse.OverrideCursor = null;
         }
     }
-
-    private string _questionLibraryDatabasePath() => ((App)System.Windows.Application.Current).Database.DatabasePath;
 
     private async void Update_Click(object sender, System.Windows.RoutedEventArgs e)
     {
@@ -155,21 +126,12 @@ public partial class MainWindow : System.Windows.Window
             {
                 var result = System.Windows.MessageBox.Show(
                     "This is a development/portable build. Would you like to download the latest installable GitHub release?",
-                    "Install Factburst Quiz Manager",
-                    System.Windows.MessageBoxButton.YesNo,
-                    System.Windows.MessageBoxImage.Information);
+                    "Install Factburst Quiz Manager", System.Windows.MessageBoxButton.YesNo, System.Windows.MessageBoxImage.Information);
                 if (result == System.Windows.MessageBoxResult.Yes)
                 {
                     UpdateButton.Content = "Downloading…";
-                    await _updates.BootstrapInstallAsync(percent =>
-                    {
-                        Dispatcher.Invoke(() => UpdateButton.Content = $"Downloading {percent}%");
-                    });
-                    System.Windows.MessageBox.Show(
-                        "The installer has been launched. Finish the installation and then start Factburst Quiz Manager from the installed shortcut.",
-                        "Installer Started",
-                        System.Windows.MessageBoxButton.OK,
-                        System.Windows.MessageBoxImage.Information);
+                    await _updates.BootstrapInstallAsync(percent => Dispatcher.Invoke(() => UpdateButton.Content = $"Downloading {percent}%"));
+                    System.Windows.MessageBox.Show("The installer has been launched. Finish the installation and then start Factburst Quiz Manager from the installed shortcut.", "Installer Started", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Information);
                 }
                 return;
             }
@@ -178,31 +140,17 @@ public partial class MainWindow : System.Windows.Window
             var update = await _updates.CheckAsync();
             if (update is null)
             {
-                System.Windows.MessageBox.Show(
-                    $"Factburst Quiz Manager {_updates.CurrentVersion} is up to date.",
-                    "No Update Available",
-                    System.Windows.MessageBoxButton.OK,
-                    System.Windows.MessageBoxImage.Information);
+                System.Windows.MessageBox.Show($"Factburst Quiz Manager {_updates.CurrentVersion} is up to date.", "No Update Available", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Information);
                 return;
             }
-
-            var resultUpdate = System.Windows.MessageBox.Show(
-                $"Version {update.TargetFullRelease.Version} is available. Install it now?\n\nYour user data is kept outside the installed application.",
-                "Update Available",
-                System.Windows.MessageBoxButton.YesNo,
-                System.Windows.MessageBoxImage.Information);
+            var resultUpdate = System.Windows.MessageBox.Show($"Version {update.TargetFullRelease.Version} is available. Install it now?\n\nYour user data is kept outside the installed application.", "Update Available", System.Windows.MessageBoxButton.YesNo, System.Windows.MessageBoxImage.Information);
             if (resultUpdate != System.Windows.MessageBoxResult.Yes)
                 return;
-
             await InstallUpdateAsync(update);
         }
         catch (Exception ex)
         {
-            System.Windows.MessageBox.Show(
-                $"The update could not be completed.\n\n{ex.Message}",
-                "Update Failed",
-                System.Windows.MessageBoxButton.OK,
-                System.Windows.MessageBoxImage.Error);
+            System.Windows.MessageBox.Show($"The update could not be completed.\n\n{ex.Message}", "Update Failed", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
         }
         finally
         {
@@ -215,9 +163,6 @@ public partial class MainWindow : System.Windows.Window
     {
         UpdateButton.IsEnabled = false;
         UpdateButton.Content = "Downloading…";
-        await _updates.InstallAsync(update, percent =>
-        {
-            Dispatcher.Invoke(() => UpdateButton.Content = $"Downloading {percent}%");
-        });
+        await _updates.InstallAsync(update, percent => Dispatcher.Invoke(() => UpdateButton.Content = $"Downloading {percent}%"));
     }
 }
