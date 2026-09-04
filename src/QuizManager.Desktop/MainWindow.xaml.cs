@@ -7,14 +7,16 @@ namespace QuizManager.Desktop;
 public partial class MainWindow : System.Windows.Window
 {
     private readonly QuestionLibraryService _questionLibrary;
+    private readonly QuizProjectService _quizProjects;
     private readonly AppUpdateService _updates;
     private readonly DispatcherTimer _updateTimer;
     private bool _updateCheckInProgress;
     private string? _lastAlertedVersion;
 
-    public MainWindow(QuestionLibraryService questionLibrary, AppUpdateService updates)
+    public MainWindow(QuestionLibraryService questionLibrary, QuizProjectService quizProjects, AppUpdateService updates)
     {
         _questionLibrary = questionLibrary;
+        _quizProjects = quizProjects;
         _updates = updates;
         InitializeComponent();
         VersionText.Text = $"v{_updates.CurrentVersion}";
@@ -80,6 +82,15 @@ public partial class MainWindow : System.Windows.Window
     private void QuestionLibrary_Click(object sender, System.Windows.RoutedEventArgs e)
     {
         var window = new QuestionLibraryWindow(_questionLibrary)
+        {
+            Owner = this
+        };
+        window.ShowDialog();
+    }
+
+    private void QuizProjects_Click(object sender, System.Windows.RoutedEventArgs e)
+    {
+        var window = new QuizProjectsWindow(_quizProjects, _questionLibrary)
         {
             Owner = this
         };
