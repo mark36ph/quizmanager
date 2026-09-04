@@ -1,5 +1,6 @@
 using QuizManager.Core.Models;
 using QuizManager.Core.Services;
+using Xunit;
 
 namespace QuizManager.Core.Tests;
 
