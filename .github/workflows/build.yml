@@ -14,9 +14,23 @@ jobs:
       - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: 8.0.x
+
       - name: Restore
         run: dotnet restore QuizManager.sln
+
       - name: Build
         run: dotnet build QuizManager.sln --configuration Release --no-restore
+
       - name: Test
         run: dotnet test tests/QuizManager.Core.Tests/QuizManager.Core.Tests.csproj --configuration Release --no-restore
+
+      - name: Publish Windows app
+        run: dotnet publish src/QuizManager.Desktop/QuizManager.Desktop.csproj --configuration Release --runtime win-x64 --self-contained true --output publish/QuizManager
+
+      - name: Upload Windows test build
+        uses: actions/upload-artifact@v4
+        with:
+          name: QuizManager-Windows
+          path: publish/QuizManager
+          if-no-files-found: error
+          retention-days: 14
