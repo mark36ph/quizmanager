@@ -6,4 +6,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <RootNamespace>QuizManager.Rendering</RootNamespace>
   </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\QuizManager.Core\QuizManager.Core.csproj" />
+  </ItemGroup>
 </Project>
