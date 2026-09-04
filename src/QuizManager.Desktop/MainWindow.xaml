@@ -10,34 +10,31 @@
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
-
         <StackPanel>
             <TextBlock Text="Factburst Quiz Manager" FontSize="30" FontWeight="SemiBold" Foreground="{StaticResource PrimaryText}" />
             <TextBlock Text="V2 • responsive quiz creation workspace" Margin="0,6,0,0" FontSize="14" Foreground="{StaticResource SecondaryText}" />
         </StackPanel>
-
         <Grid Grid.Row="1" Margin="0,28,0,0">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="220" />
                 <ColumnDefinition Width="*" />
             </Grid.ColumnDefinitions>
-
             <Border Grid.Column="0" Background="{StaticResource PanelBackground}" CornerRadius="14" Padding="14">
                 <StackPanel>
                     <Button Content="Dashboard" Height="44" Margin="0,0,0,8" />
-                    <Button Content="Question Library" Height="44" Margin="0,0,0,8" />
+                    <Button Content="Question Library" Height="44" Margin="0,0,0,8" Click="QuestionLibrary_Click" />
                     <Button Content="Quiz Projects" Height="44" Margin="0,0,0,8" />
                     <Button Content="Rendering" Height="44" Margin="0,0,0,8" />
                     <Button Content="Publishing" Height="44" Margin="0,0,0,8" />
                     <Button Content="Automation" Height="44" />
                 </StackPanel>
             </Border>
-
             <Border Grid.Column="1" Margin="20,0,0,0" Background="{StaticResource PanelBackground}" CornerRadius="14" Padding="28">
                 <StackPanel>
                     <TextBlock Text="Create a quiz" FontSize="24" FontWeight="SemiBold" Foreground="{StaticResource PrimaryText}" />
-                    <TextBlock Text="The V2 pipeline is being rebuilt so generation and rendering never freeze the desktop." Margin="0,8,0,24" Foreground="{StaticResource SecondaryText}" TextWrapping="Wrap" />
-                    <Grid>
+                    <TextBlock Text="Build and manage your question library first. Rendering is isolated behind a dedicated STA worker so the desktop stays responsive." Margin="0,8,0,24" Foreground="{StaticResource SecondaryText}" TextWrapping="Wrap" />
+                    <Button Content="Open Question Library" Width="220" Height="44" HorizontalAlignment="Left" Click="QuestionLibrary_Click" />
+                    <Grid Margin="0,28,0,0">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*" />
                             <ColumnDefinition Width="*" />
@@ -45,7 +42,7 @@
                         <Border Margin="0,0,10,0" Padding="18" CornerRadius="10" Background="#263449">
                             <StackPanel>
                                 <TextBlock Text="Question Library" Foreground="{StaticResource PrimaryText}" FontSize="17" />
-                                <TextBlock Text="Ready for the new SQLite-backed library service." Margin="0,8,0,0" Foreground="{StaticResource SecondaryText}" TextWrapping="Wrap" />
+                                <TextBlock Text="SQLite-backed questions, categories, enabled state and usage tracking." Margin="0,8,0,0" Foreground="{StaticResource SecondaryText}" TextWrapping="Wrap" />
                             </StackPanel>
                         </Border>
                         <Border Grid.Column="1" Margin="10,0,0,0" Padding="18" CornerRadius="10" Background="#263449">
