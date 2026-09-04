@@ -8,6 +8,34 @@ namespace QuizManager.Rendering;
 /// </summary>
 public sealed class StaRenderWorker
 {
+    public Task RunAsync(Action work)
+    {
+        ArgumentNullException.ThrowIfNull(work);
+
+        var completion = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var thread = new Thread(() =>
+        {
+            try
+            {
+                _ = new Application();
+                work();
+                completion.SetResult();
+            }
+            catch (Exception ex)
+            {
+                completion.SetException(ex);
+            }
+        })
+        {
+            IsBackground = true,
+            Name = "QuizManager Rendering STA"
+        };
+
+        thread.SetApartmentState(ApartmentState.STA);
+        thread.Start();
+        return completion.Task;
+    }
+
     public Task<T> RunAsync<T>(Func<T> work)
     {
         ArgumentNullException.ThrowIfNull(work);
