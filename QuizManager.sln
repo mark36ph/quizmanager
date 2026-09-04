@@ -2,3 +2,41 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.0.31903.59
 MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "QuizManager.Core", "src\QuizManager.Core\QuizManager.Core.csproj", "{8E7D7C5A-5B0C-4A9A-9A15-7F9E2F01A101}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "QuizManager.Infrastructure", "src\QuizManager.Infrastructure\QuizManager.Infrastructure.csproj", "{8E7D7C5A-5B0C-4A9A-9A15-7F9E2F01A102}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "QuizManager.Rendering", "src\QuizManager.Rendering\QuizManager.Rendering.csproj", "{8E7D7C5A-5B0C-4A9A-9A15-7F9E2F01A103}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "QuizManager.Desktop", "src\QuizManager.Desktop\QuizManager.Desktop.csproj", "{8E7D7C5A-5B0C-4A9A-9A15-7F9E2F01A104}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "QuizManager.Core.Tests", "tests\QuizManager.Core.Tests\QuizManager.Core.Tests.csproj", "{8E7D7C5A-5B0C-4A9A-9A15-7F9E2F01A105}"
+EndProject
+Global
+    GlobalSection(SolutionConfigurationPlatforms) = preSolution
+        Debug|Any CPU = Debug|Any CPU
+        Release|Any CPU = Release|Any CPU
+    EndGlobalSection
+    GlobalSection(ProjectConfigurationPlatforms) = postSolution
+        {8E7D7C5A-5B0C-4A9A-9A15-7F9E2F01A101}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+        {8E7D7C5A-5B0C-4A9A-9A15-7F9E2F01A101}.Debug|Any CPU.Build.0 = Debug|Any CPU
+        {8E7D7C5A-5B0C-4A9A-9A15-7F9E2F01A101}.Release|Any CPU.ActiveCfg = Release|Any CPU
+        {8E7D7C5A-5B0C-4A9A-9A15-7F9E2F01A101}.Release|Any CPU.Build.0 = Release|Any CPU
+        {8E7D7C5A-5B0C-4A9A-9A15-7F9E2F01A102}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+        {8E7D7C5A-5B0C-4A9A-9A15-7F9E2F01A102}.Debug|Any CPU.Build.0 = Debug|Any CPU
+        {8E7D7C5A-5B0C-4A9A-9A15-7F9E2F01A102}.Release|Any CPU.ActiveCfg = Release|Any CPU
+        {8E7D7C5A-5B0C-4A9A-9A15-7F9E2F01A102}.Release|Any CPU.Build.0 = Release|Any CPU
+        {8E7D7C5A-5B0C-4A9A-9A15-7F9E2F01A103}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+        {8E7D7C5A-5B0C-4A9A-9A15-7F9E2F01A103}.Debug|Any CPU.Build.0 = Debug|Any CPU
+        {8E7D7C5A-5B0C-4A9A-9A15-7F9E2F01A103}.Release|Any CPU.ActiveCfg = Release|Any CPU
+        {8E7D7C5A-5B0C-4A9A-9A15-7F9E2F01A103}.Release|Any CPU.Build.0 = Release|Any CPU
+        {8E7D7C5A-5B0C-4A9A-9A15-7F9E2F01A104}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+        {8E7D7C5A-5B0C-4A9A-9A15-7F9E2F01A104}.Debug|Any CPU.Build.0 = Debug|Any CPU
+        {8E7D7C5A-5B0C-4A9A-9A15-7F9E2F01A104}.Release|Any CPU.ActiveCfg = Release|Any CPU
+        {8E7D7C5A-5B0C-4A9A-9A15-7F9E2F01A104}.Release|Any CPU.Build.0 = Release|Any CPU
+        {8E7D7C5A-5B0C-4A9A-9A15-7F9E2F01A105}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+        {8E7D7C5A-5B0C-4A9A-9A15-7F9E2F01A105}.Debug|Any CPU.Build.0 = Debug|Any CPU
+        {8E7D7C5A-5B0C-4A9A-9A15-7F9E2F01A105}.Release|Any CPU.ActiveCfg = Release|Any CPU
+        {8E7D7C5A-5B0C-4A9A-9A15-7F9E2F01A105}.Release|Any CPU.Build.0 = Release|Any CPU
+    EndGlobalSection
+EndGlobal
