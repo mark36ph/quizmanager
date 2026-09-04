@@ -9,7 +9,11 @@
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
         <DockPanel>
-            <Button Content="Add Question" Width="130" Height="40" DockPanel.Dock="Right" Click="AddQuestion_Click" />
+            <StackPanel Orientation="Horizontal" DockPanel.Dock="Right">
+                <Button Content="Import JSON" Width="110" Height="40" Margin="0,0,8,0" Click="ImportJson_Click" />
+                <Button Content="Export JSON" Width="110" Height="40" Margin="0,0,8,0" Click="ExportJson_Click" />
+                <Button Content="Add Question" Width="130" Height="40" Click="AddQuestion_Click" />
+            </StackPanel>
             <StackPanel>
                 <TextBlock Text="Question Library" FontSize="26" FontWeight="SemiBold" Foreground="{StaticResource PrimaryText}" />
                 <TextBlock x:Name="StatusText" Margin="0,5,0,0" Foreground="{StaticResource SecondaryText}" />
