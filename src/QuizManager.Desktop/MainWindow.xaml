@@ -10,10 +10,16 @@
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
-        <StackPanel>
-            <TextBlock Text="Factburst Quiz Manager" FontSize="30" FontWeight="SemiBold" Foreground="{StaticResource PrimaryText}" />
-            <TextBlock Text="V2 • responsive quiz creation workspace" Margin="0,6,0,0" FontSize="14" Foreground="{StaticResource SecondaryText}" />
-        </StackPanel>
+        <Grid>
+            <StackPanel>
+                <TextBlock Text="Factburst Quiz Manager" FontSize="30" FontWeight="SemiBold" Foreground="{StaticResource PrimaryText}" />
+                <TextBlock Text="V2 • responsive quiz creation workspace" Margin="0,6,0,0" FontSize="14" Foreground="{StaticResource SecondaryText}" />
+            </StackPanel>
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Top">
+                <TextBlock x:Name="VersionText" VerticalAlignment="Center" Margin="0,0,14,0" Foreground="{StaticResource SecondaryText}" />
+                <Button x:Name="UpdateButton" Content="Check for Updates" Padding="16,9" Click="Update_Click" />
+            </StackPanel>
+        </Grid>
         <Grid Grid.Row="1" Margin="0,28,0,0">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="220" />
@@ -47,8 +53,8 @@
                         </Border>
                         <Border Grid.Column="1" Margin="10,0,0,0" Padding="18" CornerRadius="10" Background="#263449">
                             <StackPanel>
-                                <TextBlock Text="Rendering Worker" Foreground="{StaticResource PrimaryText}" FontSize="17" />
-                                <TextBlock Text="Dedicated STA rendering boundary keeps WPF work away from the UI thread." Margin="0,8,0,0" Foreground="{StaticResource SecondaryText}" TextWrapping="Wrap" />
+                                <TextBlock Text="Updates" Foreground="{StaticResource PrimaryText}" FontSize="17" />
+                                <TextBlock Text="Installed builds can check GitHub Releases and update without replacing user data." Margin="0,8,0,0" Foreground="{StaticResource SecondaryText}" TextWrapping="Wrap" />
                             </StackPanel>
                         </Border>
                     </Grid>
