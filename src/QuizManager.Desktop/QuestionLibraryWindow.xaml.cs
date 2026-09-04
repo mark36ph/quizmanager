@@ -7,6 +7,7 @@ namespace QuizManager.Desktop;
 public partial class QuestionLibraryWindow : System.Windows.Window
 {
     private readonly QuestionLibraryService _library;
+    private readonly QuestionJsonTransferService _jsonTransfer = new();
     private readonly ObservableCollection<QuizQuestion> _questions = [];
     private int _selectedId;
 
@@ -94,6 +95,65 @@ public partial class QuestionLibraryWindow : System.Windows.Window
         catch (Exception ex)
         {
             System.Windows.MessageBox.Show(ex.Message, "Could not save question", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Warning);
+        }
+    }
+
+    private async void ImportJson_Click(object sender, System.Windows.RoutedEventArgs e)
+    {
+        var dialog = new Microsoft.Win32.OpenFileDialog
+        {
+            Title = "Import Questions",
+            Filter = "JSON files (*.json)|*.json|All files (*.*)|*.*",
+            CheckFileExists = true,
+            Multiselect = false
+        };
+
+        if (dialog.ShowDialog() != true) return;
+
+        try
+        {
+            var imported = await _jsonTransfer.ImportAsync(dialog.FileName);
+            if (imported.Count == 0)
+            {
+                System.Windows.MessageBox.Show("No valid questions were found in the selected JSON file.", "Import Questions", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Information);
+                return;
+            }
+
+            foreach (var question in imported)
+                await _library.AddAsync(question);
+
+            await LoadAsync();
+            StatusText.Text = $"Imported {imported.Count} questions";
+        }
+        catch (Exception ex)
+        {
+            System.Windows.MessageBox.Show(ex.Message, "Could not import questions", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Warning);
+        }
+    }
+
+    private async void ExportJson_Click(object sender, System.Windows.RoutedEventArgs e)
+    {
+        var dialog = new Microsoft.Win32.SaveFileDialog
+        {
+            Title = "Export Questions",
+            Filter = "JSON files (*.json)|*.json",
+            DefaultExt = ".json",
+            AddExtension = true,
+            FileName = "quiz-questions.json",
+            OverwritePrompt = true
+        };
+
+        if (dialog.ShowDialog() != true) return;
+
+        try
+        {
+            var questions = await _library.GetAsync();
+            await _jsonTransfer.ExportAsync(dialog.FileName, questions);
+            StatusText.Text = $"Exported {questions.Count} questions";
+        }
+        catch (Exception ex)
+        {
+            System.Windows.MessageBox.Show(ex.Message, "Could not export questions", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Warning);
         }
     }
 
