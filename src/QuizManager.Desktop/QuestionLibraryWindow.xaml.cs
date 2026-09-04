@@ -1,4 +1,5 @@
 using System.Collections.ObjectModel;
+using Microsoft.Win32;
 using QuizManager.Core.Models;
 using QuizManager.Infrastructure.Data;
 
@@ -7,9 +8,10 @@ namespace QuizManager.Desktop;
 public partial class QuestionLibraryWindow : System.Windows.Window
 {
     private readonly QuestionLibraryService _library;
-    private readonly QuestionJsonTransferService _jsonTransfer = new();
     private readonly ObservableCollection<QuizQuestion> _questions = [];
+    private readonly QuestionJsonTransferService _jsonTransfer = new();
     private int _selectedId;
+    private string _selectedImagePath = "";
 
     public QuestionLibraryWindow(QuestionLibraryService library)
     {
@@ -55,6 +57,7 @@ public partial class QuestionLibraryWindow : System.Windows.Window
     {
         if (QuestionsGrid.SelectedItem is not QuizQuestion question) return;
         _selectedId = question.Id;
+        _selectedImagePath = question.ImagePath ?? "";
         QuestionText.Text = question.Question;
         AnswerA.Text = question.Answers.ElementAtOrDefault(0) ?? "";
         AnswerB.Text = question.Answers.ElementAtOrDefault(1) ?? "";
@@ -66,6 +69,8 @@ public partial class QuestionLibraryWindow : System.Windows.Window
         EnabledBox.IsChecked = question.IsEnabled;
         ExplanationText.Text = question.Explanation;
         SourceText.Text = question.Source;
+        ImagePathText.Text = string.IsNullOrWhiteSpace(_selectedImagePath) ? "No image selected" : _selectedImagePath;
+        UpdateImagePreview(_selectedImagePath);
     }
 
     private async void Save_Click(object sender, System.Windows.RoutedEventArgs e)
@@ -82,7 +87,8 @@ public partial class QuestionLibraryWindow : System.Windows.Window
                 (DifficultyBox.SelectedItem as System.Windows.Controls.ComboBoxItem)?.Content?.ToString() ?? "medium",
                 SourceText.Text,
                 _questions.FirstOrDefault(q => q.Id == _selectedId)?.TimesUsed ?? 0,
-                EnabledBox.IsChecked == true);
+                EnabledBox.IsChecked == true,
+                _selectedImagePath);
 
             if (_selectedId == 0)
                 _selectedId = await _library.AddAsync(question);
@@ -98,65 +104,6 @@ public partial class QuestionLibraryWindow : System.Windows.Window
         }
     }
 
-    private async void ImportJson_Click(object sender, System.Windows.RoutedEventArgs e)
-    {
-        var dialog = new Microsoft.Win32.OpenFileDialog
-        {
-            Title = "Import Questions",
-            Filter = "JSON files (*.json)|*.json|All files (*.*)|*.*",
-            CheckFileExists = true,
-            Multiselect = false
-        };
-
-        if (dialog.ShowDialog() != true) return;
-
-        try
-        {
-            var imported = await _jsonTransfer.ImportAsync(dialog.FileName);
-            if (imported.Count == 0)
-            {
-                System.Windows.MessageBox.Show("No valid questions were found in the selected JSON file.", "Import Questions", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Information);
-                return;
-            }
-
-            foreach (var question in imported)
-                await _library.AddAsync(question);
-
-            await LoadAsync();
-            StatusText.Text = $"Imported {imported.Count} questions";
-        }
-        catch (Exception ex)
-        {
-            System.Windows.MessageBox.Show(ex.Message, "Could not import questions", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Warning);
-        }
-    }
-
-    private async void ExportJson_Click(object sender, System.Windows.RoutedEventArgs e)
-    {
-        var dialog = new Microsoft.Win32.SaveFileDialog
-        {
-            Title = "Export Questions",
-            Filter = "JSON files (*.json)|*.json",
-            DefaultExt = ".json",
-            AddExtension = true,
-            FileName = "quiz-questions.json",
-            OverwritePrompt = true
-        };
-
-        if (dialog.ShowDialog() != true) return;
-
-        try
-        {
-            var questions = await _library.GetAsync();
-            await _jsonTransfer.ExportAsync(dialog.FileName, questions);
-            StatusText.Text = $"Exported {questions.Count} questions";
-        }
-        catch (Exception ex)
-        {
-            System.Windows.MessageBox.Show(ex.Message, "Could not export questions", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Warning);
-        }
-    }
-
     private async void Delete_Click(object sender, System.Windows.RoutedEventArgs e)
     {
         if (_selectedId == 0) return;
@@ -169,10 +116,13 @@ public partial class QuestionLibraryWindow : System.Windows.Window
     private void New_Click(object sender, System.Windows.RoutedEventArgs e)
     {
         _selectedId = 0;
+        _selectedImagePath = "";
         QuestionsGrid.SelectedItem = null;
         QuestionText.Clear(); AnswerA.Clear(); AnswerB.Clear(); AnswerC.Clear(); AnswerD.Clear();
         CorrectBox.SelectedIndex = 0; CategoryText.Text = "General Knowledge"; DifficultyBox.SelectedIndex = 1;
         EnabledBox.IsChecked = true; ExplanationText.Clear(); SourceText.Clear();
+        ImagePathText.Text = "No image selected";
+        UpdateImagePreview("");
     }
 
     private void AddQuestion_Click(object sender, System.Windows.RoutedEventArgs e) => New_Click(sender, e);
@@ -181,6 +131,108 @@ public partial class QuestionLibraryWindow : System.Windows.Window
     private async void CategoryBox_SelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
     {
         if (IsInitialized) await RefreshAsync();
+    }
+
+    private async void ImportJson_Click(object sender, System.Windows.RoutedEventArgs e)
+    {
+        var dialog = new OpenFileDialog
+        {
+            Title = "Import questions",
+            Filter = "JSON files (*.json)|*.json|All files (*.*)|*.*",
+            CheckFileExists = true
+        };
+        if (dialog.ShowDialog() != true) return;
+
+        try
+        {
+            var imported = await _jsonTransfer.ImportAsync(dialog.FileName);
+            var added = 0;
+            foreach (var question in imported)
+            {
+                await _library.AddAsync(question);
+                added++;
+            }
+
+            await LoadAsync();
+            StatusText.Text = $"Imported {added} questions";
+        }
+        catch (Exception ex)
+        {
+            System.Windows.MessageBox.Show(ex.Message, "Could not import questions", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Warning);
+        }
+    }
+
+    private async void ExportJson_Click(object sender, System.Windows.RoutedEventArgs e)
+    {
+        var dialog = new SaveFileDialog
+        {
+            Title = "Export questions",
+            FileName = "quiz-questions.json",
+            Filter = "JSON files (*.json)|*.json|All files (*.*)|*.*",
+            AddExtension = true,
+            OverwritePrompt = true
+        };
+        if (dialog.ShowDialog() != true) return;
+
+        try
+        {
+            var category = CategoryBox.SelectedItem as string;
+            if (category == "All categories") category = null;
+            var questions = await _library.GetAsync(category);
+            await _jsonTransfer.ExportAsync(dialog.FileName, questions);
+            StatusText.Text = $"Exported {questions.Count} questions";
+        }
+        catch (Exception ex)
+        {
+            System.Windows.MessageBox.Show(ex.Message, "Could not export questions", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Warning);
+        }
+    }
+
+    private void SelectImage_Click(object sender, System.Windows.RoutedEventArgs e)
+    {
+        var dialog = new OpenFileDialog
+        {
+            Title = "Select question image",
+            Filter = "Image files (*.png;*.jpg;*.jpeg;*.webp;*.bmp)|*.png;*.jpg;*.jpeg;*.webp;*.bmp|All files (*.*)|*.*",
+            CheckFileExists = true
+        };
+        if (dialog.ShowDialog() != true) return;
+
+        _selectedImagePath = dialog.FileName;
+        ImagePathText.Text = _selectedImagePath;
+        UpdateImagePreview(_selectedImagePath);
+    }
+
+    private void ClearImage_Click(object sender, System.Windows.RoutedEventArgs e)
+    {
+        _selectedImagePath = "";
+        ImagePathText.Text = "No image selected";
+        UpdateImagePreview("");
+    }
+
+    private void UpdateImagePreview(string imagePath)
+    {
+        try
+        {
+            if (string.IsNullOrWhiteSpace(imagePath) || !System.IO.File.Exists(imagePath))
+            {
+                ImagePreview.Source = null;
+                return;
+            }
+
+            var bitmap = new System.Windows.Media.Imaging.BitmapImage();
+            bitmap.BeginInit();
+            bitmap.UriSource = new Uri(imagePath, UriKind.Absolute);
+            bitmap.CacheOption = System.Windows.Media.Imaging.BitmapCacheOption.OnLoad;
+            bitmap.DecodePixelWidth = 300;
+            bitmap.EndInit();
+            bitmap.Freeze();
+            ImagePreview.Source = bitmap;
+        }
+        catch
+        {
+            ImagePreview.Source = null;
+        }
     }
 
     private void SelectById(int id)
