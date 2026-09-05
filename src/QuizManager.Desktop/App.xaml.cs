@@ -8,6 +8,7 @@ public partial class App : System.Windows.Application
     public QuizDatabase Database { get; private set; } = null!;
     public QuestionLibraryService QuestionLibrary { get; private set; } = null!;
     public QuizProjectService QuizProjects { get; private set; } = null!;
+    public PublishingService Publishing { get; private set; } = null!;
     public AppUpdateService Updates { get; } = new();
 
     protected override async void OnStartup(System.Windows.StartupEventArgs e)
@@ -26,8 +27,10 @@ public partial class App : System.Windows.Application
             QuestionLibrary = new QuestionLibraryService(Database);
             QuizProjects = new QuizProjectService(Database, QuestionLibrary);
             await QuizProjects.InitializeAsync();
+            Publishing = new PublishingService(Database);
+            await Publishing.InitializeAsync();
 
-            MainWindow = new MainWindow(QuestionLibrary, QuizProjects, Updates);
+            MainWindow = new MainWindow(QuestionLibrary, QuizProjects, Publishing, Updates);
             MainWindow.Show();
         }
         catch (Exception ex)
