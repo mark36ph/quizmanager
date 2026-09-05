@@ -9,14 +9,15 @@ public partial class MainWindow : System.Windows.Window
 {
     private readonly QuestionLibraryService _questionLibrary;
     private readonly QuizProjectService _quizProjects;
+    private readonly PublishingService _publishing;
     private readonly AppUpdateService _updates;
     private readonly DispatcherTimer _updateTimer;
     private bool _updateCheckInProgress;
     private string? _lastAlertedVersion;
 
-    public MainWindow(QuestionLibraryService questionLibrary, QuizProjectService quizProjects, AppUpdateService updates)
+    public MainWindow(QuestionLibraryService questionLibrary, QuizProjectService quizProjects, PublishingService publishing, AppUpdateService updates)
     {
-        _questionLibrary = questionLibrary; _quizProjects = quizProjects; _updates = updates; InitializeComponent();
+        _questionLibrary = questionLibrary; _quizProjects = quizProjects; _publishing = publishing; _updates = updates; InitializeComponent();
         VersionText.Text = $"v{_updates.CurrentVersion}";
         _updateTimer = new DispatcherTimer { Interval = TimeSpan.FromMinutes(30) }; _updateTimer.Tick += UpdateTimer_Tick; _updateTimer.Start(); Loaded += MainWindow_Loaded; Closed += (_, _) => _updateTimer.Stop();
     }
@@ -30,6 +31,7 @@ public partial class MainWindow : System.Windows.Window
     private void QuestionLibrary_Click(object sender, System.Windows.RoutedEventArgs e) => new QuestionLibraryWindow(_questionLibrary) { Owner = this }.ShowDialog();
     private void QuizProjects_Click(object sender, System.Windows.RoutedEventArgs e) => new QuizProjectsWindow(_quizProjects, _questionLibrary) { Owner = this }.ShowDialog();
     private void Rendering_Click(object sender, System.Windows.RoutedEventArgs e) => new RenderingWindow(_quizProjects) { Owner = this }.ShowDialog();
+    private void Publishing_Click(object sender, System.Windows.RoutedEventArgs e) => new PublishingWindow(_publishing) { Owner = this }.ShowDialog();
 
     private async void ImportLegacy_Click(object sender, System.Windows.RoutedEventArgs e)
     {
