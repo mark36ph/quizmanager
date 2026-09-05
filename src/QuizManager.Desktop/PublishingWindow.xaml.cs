@@ -1,14 +1,17 @@
 using Microsoft.Win32;
+using QuizManager.Core.Models;
 using QuizManager.Infrastructure.Data;
 using System.Diagnostics;
 using System.IO;
+using System.Windows.Controls;
 
 namespace QuizManager.Desktop;
 
 public partial class PublishingWindow : System.Windows.Window
 {
     private readonly PublishingService _publishing;
-    private IReadOnlyList<QuizManager.Core.Models.PublishJob> _jobs = Array.Empty<QuizManager.Core.Models.PublishJob>();
+    private readonly YouTubePublisher _youtube = new();
+    private IReadOnlyList<PublishJob> _jobs = Array.Empty<PublishJob>();
 
     public PublishingWindow(PublishingService publishing)
     {
@@ -49,7 +52,7 @@ public partial class PublishingWindow : System.Windows.Window
 
     private async void Retry_Click(object sender, System.Windows.RoutedEventArgs e)
     {
-        if (JobsGrid.SelectedItem is not QuizManager.Core.Models.PublishJob job || !string.Equals(job.Status, "Failed", StringComparison.OrdinalIgnoreCase))
+        if (JobsGrid.SelectedItem is not PublishJob job || !string.Equals(job.Status, "Failed", StringComparison.OrdinalIgnoreCase))
         {
             System.Windows.MessageBox.Show(this, "Select a failed publishing job first.", "Publishing", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Information);
             return;
@@ -65,7 +68,51 @@ public partial class PublishingWindow : System.Windows.Window
         }
     }
 
-    private void Filter_Changed(object sender, System.Windows.Controls.SelectionChangedEventArgs e) => ApplyFilter();
+    private async void UploadSelected_Click(object sender, System.Windows.RoutedEventArgs e)
+    {
+        if (JobsGrid.SelectedItem is not PublishJob job || !string.Equals(job.Status, "Queued", StringComparison.OrdinalIgnoreCase))
+        {
+            System.Windows.MessageBox.Show(this, "Select a queued publishing job first.", "YouTube", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Information);
+            return;
+        }
+
+        var tokenBox = new PasswordBox { Width = 360, Margin = new System.Windows.Thickness(0, 8, 0, 12) };
+        var panel = new StackPanel { Margin = new System.Windows.Thickness(16) };
+        panel.Children.Add(new TextBlock { Text = "YouTube access token", FontWeight = System.Windows.FontWeights.SemiBold });
+        panel.Children.Add(new TextBlock { Text = "Paste a valid OAuth access token for this upload. It is used only in memory and is not saved by Quiz Manager.", Margin = new System.Windows.Thickness(0, 6, 0, 4), TextWrapping = System.Windows.TextWrapping.Wrap });
+        panel.Children.Add(tokenBox);
+        var dialog = new System.Windows.Window { Title = "YouTube authorization", Content = panel, Width = 430, Height = 210, Owner = this, WindowStartupLocation = System.Windows.WindowStartupLocation.CenterOwner, Background = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(24, 31, 43)) };
+        var buttons = new StackPanel { Orientation = System.Windows.Controls.Orientation.Horizontal, HorizontalAlignment = System.Windows.HorizontalAlignment.Right };
+        var cancel = new Button { Content = "Cancel", Width = 90, Height = 34, Margin = new System.Windows.Thickness(0, 0, 8, 0) };
+        var upload = new Button { Content = "Upload", Width = 90, Height = 34 };
+        cancel.Click += (_, _) => dialog.DialogResult = false;
+        upload.Click += (_, _) => dialog.DialogResult = true;
+        buttons.Children.Add(cancel); buttons.Children.Add(upload); panel.Children.Add(buttons);
+        if (dialog.ShowDialog() != true || string.IsNullOrWhiteSpace(tokenBox.Password)) return;
+
+        try
+        {
+            UploadSelectedButton.IsEnabled = false;
+            UploadSelectedButton.Content = "Uploading…";
+            var result = await _youtube.UploadAsync(tokenBox.Password, job, "private");
+            if (!string.IsNullOrWhiteSpace(job.ThumbnailPath)) await _youtube.SetThumbnailAsync(tokenBox.Password, result.VideoId, job.ThumbnailPath);
+            await _publishing.MarkPublishedAsync(job.Id, result.VideoId, result.Url);
+            await LoadJobsAsync();
+            System.Windows.MessageBox.Show(this, $"YouTube upload completed.\n\n{result.Url}", "Published", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Information);
+        }
+        catch (Exception ex)
+        {
+            try { await _publishing.MarkFailedAsync(job.Id, ex.Message); await LoadJobsAsync(); } catch { }
+            System.Windows.MessageBox.Show(this, $"The YouTube upload failed.\n\n{ex.Message}", "YouTube", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
+        }
+        finally
+        {
+            UploadSelectedButton.IsEnabled = true;
+            UploadSelectedButton.Content = "Upload Selected";
+        }
+    }
+
+    private void Filter_Changed(object sender, SelectionChangedEventArgs e) => ApplyFilter();
 
     private void OpenFolder_Click(object sender, System.Windows.RoutedEventArgs e)
     {
@@ -81,7 +128,7 @@ public partial class PublishingWindow : System.Windows.Window
 
     private void ApplyFilter()
     {
-        var filter = (StatusFilter?.SelectedItem as System.Windows.Controls.ComboBoxItem)?.Content?.ToString() ?? "All";
+        var filter = (StatusFilter?.SelectedItem as ComboBoxItem)?.Content?.ToString() ?? "All";
         JobsGrid.ItemsSource = string.Equals(filter, "All", StringComparison.OrdinalIgnoreCase)
             ? _jobs
             : _jobs.Where(job => string.Equals(job.Status, filter, StringComparison.OrdinalIgnoreCase)).ToList();
