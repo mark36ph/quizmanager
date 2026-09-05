@@ -28,6 +28,7 @@ public partial class MainWindow : System.Windows.Window
         if (!_updates.IsInstalled || _updateCheckInProgress) return; _updateCheckInProgress = true;
         try { var update = await _updates.CheckAsync(); if (update is null) return; var availableVersion = update.TargetFullRelease.Version.ToString(); if (string.Equals(_lastAlertedVersion, availableVersion, StringComparison.OrdinalIgnoreCase)) return; _lastAlertedVersion = availableVersion; if (System.Windows.MessageBox.Show($"Factburst Quiz Manager {availableVersion} is available.\n\nWould you like to install the update now?\n\nYour user data is kept outside the installed application.", "Update Available", System.Windows.MessageBoxButton.YesNo, System.Windows.MessageBoxImage.Information) == System.Windows.MessageBoxResult.Yes) await InstallUpdateAsync(update); } catch { } finally { _updateCheckInProgress = false; }
     }
+    private void Dashboard_Click(object sender, System.Windows.RoutedEventArgs e) => new DashboardWindow(_questionLibrary, _quizProjects, _publishing) { Owner = this }.ShowDialog();
     private void QuestionLibrary_Click(object sender, System.Windows.RoutedEventArgs e) => new QuestionLibraryWindow(_questionLibrary) { Owner = this }.ShowDialog();
     private void QuizProjects_Click(object sender, System.Windows.RoutedEventArgs e) => new QuizProjectsWindow(_quizProjects, _questionLibrary) { Owner = this }.ShowDialog();
     private void Rendering_Click(object sender, System.Windows.RoutedEventArgs e) => new RenderingWindow(_quizProjects) { Owner = this }.ShowDialog();
