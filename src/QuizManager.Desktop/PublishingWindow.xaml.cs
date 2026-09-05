@@ -8,6 +8,7 @@ namespace QuizManager.Desktop;
 public partial class PublishingWindow : System.Windows.Window
 {
     private readonly PublishingService _publishing;
+    private IReadOnlyList<QuizManager.Core.Models.PublishJob> _jobs = Array.Empty<QuizManager.Core.Models.PublishJob>();
 
     public PublishingWindow(PublishingService publishing)
     {
@@ -46,6 +47,26 @@ public partial class PublishingWindow : System.Windows.Window
         }
     }
 
+    private async void Retry_Click(object sender, System.Windows.RoutedEventArgs e)
+    {
+        if (JobsGrid.SelectedItem is not QuizManager.Core.Models.PublishJob job || !string.Equals(job.Status, "Failed", StringComparison.OrdinalIgnoreCase))
+        {
+            System.Windows.MessageBox.Show(this, "Select a failed publishing job first.", "Publishing", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Information);
+            return;
+        }
+        try
+        {
+            await _publishing.MarkQueuedAsync(job.Id);
+            await LoadJobsAsync();
+        }
+        catch (Exception ex)
+        {
+            System.Windows.MessageBox.Show(this, $"The job could not be re-queued.\n\n{ex.Message}", "Publishing", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
+        }
+    }
+
+    private void Filter_Changed(object sender, System.Windows.Controls.SelectionChangedEventArgs e) => ApplyFilter();
+
     private void OpenFolder_Click(object sender, System.Windows.RoutedEventArgs e)
     {
         if (!File.Exists(VideoPathText.Text)) return;
@@ -54,6 +75,15 @@ public partial class PublishingWindow : System.Windows.Window
 
     private async Task LoadJobsAsync()
     {
-        JobsGrid.ItemsSource = await _publishing.GetJobsAsync();
+        _jobs = await _publishing.GetJobsAsync();
+        ApplyFilter();
+    }
+
+    private void ApplyFilter()
+    {
+        var filter = (StatusFilter?.SelectedItem as System.Windows.Controls.ComboBoxItem)?.Content?.ToString() ?? "All";
+        JobsGrid.ItemsSource = string.Equals(filter, "All", StringComparison.OrdinalIgnoreCase)
+            ? _jobs
+            : _jobs.Where(job => string.Equals(job.Status, filter, StringComparison.OrdinalIgnoreCase)).ToList();
     }
 }
