@@ -1,0 +1,33 @@
+<Window x:Class="QuizManager.Desktop.PublishingWindow" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" Title="Publishing" Width="1100" Height="720" MinWidth="850" MinHeight="560" Background="{StaticResource PageBackground}">
+    <Grid Margin="24">
+        <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions>
+        <StackPanel>
+            <TextBlock Text="Publishing" FontSize="26" FontWeight="SemiBold" Foreground="{StaticResource PrimaryText}"/>
+            <TextBlock Text="Prepare rendered quizzes for YouTube and keep a reliable local publishing history." Margin="0,6,0,18" Foreground="{StaticResource SecondaryText}"/>
+        </StackPanel>
+        <Border Grid.Row="1" Background="{StaticResource PanelBackground}" CornerRadius="12" Padding="18" Margin="0,0,0,18">
+            <Grid>
+                <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                <StackPanel Margin="0,0,12,0">
+                    <TextBlock Text="Rendered video" Foreground="{StaticResource PrimaryText}"/>
+                    <DockPanel Margin="0,6,0,10"><TextBox x:Name="VideoPathText" Height="34" VerticalContentAlignment="Center"/><Button Content="Browse…" Width="90" Margin="8,0,0,0" Click="BrowseVideo_Click"/></DockPanel>
+                    <TextBlock Text="Title" Foreground="{StaticResource PrimaryText}"/><TextBox x:Name="TitleText" Height="34" Margin="0,6,0,10" VerticalContentAlignment="Center"/>
+                    <TextBlock Text="Thumbnail (optional)" Foreground="{StaticResource PrimaryText}"/><DockPanel Margin="0,6,0,0"><TextBox x:Name="ThumbnailPathText" Height="34" VerticalContentAlignment="Center"/><Button Content="Browse…" Width="90" Margin="8,0,0,0" Click="BrowseThumbnail_Click"/></DockPanel>
+                </StackPanel>
+                <StackPanel Grid.Column="1" Margin="12,0,0,0">
+                    <TextBlock Text="Description" Foreground="{StaticResource PrimaryText}"/><TextBox x:Name="DescriptionText" Height="150" Margin="0,6,0,10" AcceptsReturn="True" TextWrapping="Wrap" VerticalScrollBarVisibility="Auto"/>
+                    <StackPanel Orientation="Horizontal"><Button Content="Queue for YouTube" Width="170" Height="40" Click="Queue_Click"/><Button Content="Open Video Folder" Width="150" Height="40" Margin="10,0,0,0" Click="OpenFolder_Click"/></StackPanel>
+                    <TextBlock Text="Actual YouTube upload is deliberately kept behind the provider boundary; this workspace never pretends a local queue is an online upload." Margin="0,14,0,0" TextWrapping="Wrap" Foreground="{StaticResource SecondaryText}"/>
+                </StackPanel>
+            </Grid>
+        </Border>
+        <Border Grid.Row="2" Background="{StaticResource PanelBackground}" CornerRadius="12" Padding="18">
+            <Grid><Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions>
+                <TextBlock Text="Publishing history" FontSize="18" FontWeight="SemiBold" Foreground="{StaticResource PrimaryText}" Margin="0,0,0,12"/>
+                <DataGrid Grid.Row="1" x:Name="JobsGrid" AutoGenerateColumns="False" IsReadOnly="True" CanUserAddRows="False">
+                    <DataGrid.Columns><DataGridTextColumn Header="Status" Binding="{Binding Status}" Width="100"/><DataGridTextColumn Header="Platform" Binding="{Binding Platform}" Width="100"/><DataGridTextColumn Header="Title" Binding="{Binding Title}" Width="*"/><DataGridTextColumn Header="Created" Binding="{Binding CreatedUtc}" Width="170"/><DataGridTextColumn Header="Video" Binding="{Binding VideoPath}" Width="260"/></DataGrid.Columns>
+                </DataGrid>
+            </Grid>
+        </Border>
+    </Grid>
+</Window>
