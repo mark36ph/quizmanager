@@ -17,7 +17,7 @@
                 <StackPanel Grid.Column="1" Margin="12,0,0,0">
                     <TextBlock Text="Description" Foreground="{StaticResource PrimaryText}"/><TextBox x:Name="DescriptionText" Height="150" Margin="0,6,0,10" AcceptsReturn="True" TextWrapping="Wrap" VerticalScrollBarVisibility="Auto"/>
                     <StackPanel Orientation="Horizontal"><Button Content="Queue for YouTube" Width="170" Height="40" Click="Queue_Click"/><Button Content="Open Video Folder" Width="150" Height="40" Margin="10,0,0,0" Click="OpenFolder_Click"/></StackPanel>
-                    <TextBlock Text="Actual YouTube upload is deliberately kept behind the provider boundary; this workspace never pretends a local queue is an online upload." Margin="0,14,0,0" TextWrapping="Wrap" Foreground="{StaticResource SecondaryText}"/>
+                    <TextBlock Text="Online upload uses the YouTube API with a token supplied for the current operation; the token is not saved by Quiz Manager." Margin="0,14,0,0" TextWrapping="Wrap" Foreground="{StaticResource SecondaryText}"/>
                 </StackPanel>
             </Grid>
         </Border>
@@ -29,6 +29,7 @@
                         <TextBlock Text="Status" VerticalAlignment="Center" Foreground="{StaticResource SecondaryText}" Margin="0,0,8,0"/>
                         <ComboBox x:Name="StatusFilter" Width="120" SelectedIndex="0" SelectionChanged="Filter_Changed"><ComboBoxItem Content="All"/><ComboBoxItem Content="Queued"/><ComboBoxItem Content="Published"/><ComboBoxItem Content="Failed"/></ComboBox>
                         <Button Content="Retry Failed" Width="110" Height="32" Margin="10,0,0,0" Click="Retry_Click"/>
+                        <Button x:Name="UploadSelectedButton" Content="Upload Selected" Width="130" Height="32" Margin="10,0,0,0" Click="UploadSelected_Click"/>
                     </StackPanel>
                 </DockPanel>
                 <DataGrid Grid.Row="1" x:Name="JobsGrid" AutoGenerateColumns="False" IsReadOnly="True" CanUserAddRows="False">
