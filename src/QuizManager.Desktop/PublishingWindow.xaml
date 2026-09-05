@@ -23,7 +23,14 @@
         </Border>
         <Border Grid.Row="2" Background="{StaticResource PanelBackground}" CornerRadius="12" Padding="18">
             <Grid><Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions>
-                <TextBlock Text="Publishing history" FontSize="18" FontWeight="SemiBold" Foreground="{StaticResource PrimaryText}" Margin="0,0,0,12"/>
+                <DockPanel Margin="0,0,0,12">
+                    <TextBlock Text="Publishing history" FontSize="18" FontWeight="SemiBold" Foreground="{StaticResource PrimaryText}" VerticalAlignment="Center"/>
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                        <TextBlock Text="Status" VerticalAlignment="Center" Foreground="{StaticResource SecondaryText}" Margin="0,0,8,0"/>
+                        <ComboBox x:Name="StatusFilter" Width="120" SelectedIndex="0" SelectionChanged="Filter_Changed"><ComboBoxItem Content="All"/><ComboBoxItem Content="Queued"/><ComboBoxItem Content="Published"/><ComboBoxItem Content="Failed"/></ComboBox>
+                        <Button Content="Retry Failed" Width="110" Height="32" Margin="10,0,0,0" Click="Retry_Click"/>
+                    </StackPanel>
+                </DockPanel>
                 <DataGrid Grid.Row="1" x:Name="JobsGrid" AutoGenerateColumns="False" IsReadOnly="True" CanUserAddRows="False">
                     <DataGrid.Columns><DataGridTextColumn Header="Status" Binding="{Binding Status}" Width="100"/><DataGridTextColumn Header="Platform" Binding="{Binding Platform}" Width="100"/><DataGridTextColumn Header="Title" Binding="{Binding Title}" Width="*"/><DataGridTextColumn Header="Created" Binding="{Binding CreatedUtc}" Width="170"/><DataGridTextColumn Header="Video" Binding="{Binding VideoPath}" Width="260"/></DataGrid.Columns>
                 </DataGrid>
