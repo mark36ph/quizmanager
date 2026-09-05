@@ -32,6 +32,7 @@ public partial class MainWindow : System.Windows.Window
     private void QuizProjects_Click(object sender, System.Windows.RoutedEventArgs e) => new QuizProjectsWindow(_quizProjects, _questionLibrary) { Owner = this }.ShowDialog();
     private void Rendering_Click(object sender, System.Windows.RoutedEventArgs e) => new RenderingWindow(_quizProjects) { Owner = this }.ShowDialog();
     private void Publishing_Click(object sender, System.Windows.RoutedEventArgs e) => new PublishingWindow(_publishing) { Owner = this }.ShowDialog();
+    private void Automation_Click(object sender, System.Windows.RoutedEventArgs e) => new AutomationWindow { Owner = this }.ShowDialog();
 
     private async void ImportLegacy_Click(object sender, System.Windows.RoutedEventArgs e)
     {
