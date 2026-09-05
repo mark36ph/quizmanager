@@ -44,7 +44,7 @@ public sealed class DashboardWindow : Window
     {
         try
         {
-            var questions = await _questions.GetQuestionsAsync();
+            var questions = await _questions.GetAsync();
             var projects = await _projects.GetAsync();
             var jobs = await _publishing.GetJobsAsync();
             _content.Children.Clear();
