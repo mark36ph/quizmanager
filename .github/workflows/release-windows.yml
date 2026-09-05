@@ -45,7 +45,8 @@ jobs:
           } else {
             $manifest = Get-Content version.json -Raw | ConvertFrom-Json
             $parts = ([string]$manifest.latest_version).Split('.')
-            if ($parts.Count -ne 3 -or $parts | Where-Object { $_ -notmatch '^\d+$' }) {
+            $invalidPart = $parts | Where-Object { $_ -notmatch '^\d+$' }
+            if ($parts.Count -ne 3 -or $null -ne $invalidPart) {
               throw "version.json must contain a three-part numeric version such as 1.0.20"
             }
             $patch = [int]$parts[2] + 1
@@ -122,7 +123,8 @@ jobs:
         run: |
           if (@(Get-ChildItem Releases -File -Filter "*Setup.exe").Count -eq 0) { throw "No Windows Setup.exe was produced." }
           if (@(Get-ChildItem Releases -File -Filter "*-full.nupkg").Count -eq 0) { throw "No full update package was produced." }
-          if (@(Get-ChildItem Releases -File -Filter "releases.win-x64-stable.json").Count -eq 0) { throw "No stable update feed was produced." }
+          if (@(Get-ChildItem Releases -File -Filter "releases.win-x64-stable.json").Count -eq 0) { throw "No stable update feed was produced."
+          }
 
       - name: Publish GitHub release
         shell: pwsh
